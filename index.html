@@ -72,7 +72,7 @@
         <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري التحميل...</p></div>
     </div>
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXhO1igLWKakPYI2j8CaJbPC_7hiYpoALIpvk88d4RQ1Ocx6ohdqIH6o2XXbH_kC665w/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwb6OujAoJmVmHo2aZmmQHZhWCw4k3s6T1oyIAQljixhSB20IDVsRb1CeQByKuivixfuA/exec';
 
         const views = ['home-screen', 'teacher-view', 'student-view'];
         const teacherForm = document.getElementById('quiz-form');
@@ -103,27 +103,18 @@
         
         teacherForm.addEventListener('submit', e => {
             e.preventDefault(); showLoader(true); teacherFeedback.textContent = '';
-            const data = { action: 'saveQuestions', questions: [] };
-            for (let i = 1; i <= 3; i++) { data.questions.push({ q: document.getElementById(`q${i}`).value, opt1: document.getElementById(`q${i}_opt1`).value, opt2: document.getElementById(`q${i}_opt2`).value, opt3: document.getElementById(`q${i}_opt3`).value, correct: document.getElementById(`q${i}_correct`).value, score: document.getElementById(`q${i}_score`).value }); }
+            const questions = [];
+            for (let i = 1; i <= 3; i++) { questions.push({ q: document.getElementById(`q${i}`).value, opt1: document.getElementById(`q${i}_opt1`).value, opt2: document.getElementById(`q${i}_opt2`).value, opt3: document.getElementById(`q${i}_opt3`).value, correct: document.getElementById(`q${i}_correct`).value, score: document.getElementById(`q${i}_score`).value }); }
             
-            // تم تصحيح هذا الجزء
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
-                .then(response => response.json())
-                .then(result => {
-                    showLoader(false);
-                    if (result.status === 'success') {
-                        teacherFeedback.textContent = 'تم حفظ الأسئلة بنجاح!';
-                        teacherFeedback.className = 'text-green-600 font-bold';
-                        teacherForm.reset();
-                    } else {
-                        throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
-                    }
-                })
-                .catch(error => {
-                    showLoader(false);
-                    teacherFeedback.textContent = `فشل الحفظ: ${error.message}`;
-                    teacherFeedback.className = 'text-red-600 font-bold';
-                });
+            const url = `${WEB_APP_URL}?action=saveQuestions&data=${encodeURIComponent(JSON.stringify(questions))}`;
+            fetch(url).then(res => res.json()).then(result => {
+                showLoader(false);
+                if (result.status === 'success') {
+                    teacherFeedback.textContent = 'تم حفظ الأسئلة بنجاح!';
+                    teacherFeedback.className = 'text-green-600 font-bold';
+                    teacherForm.reset();
+                } else { throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.'); }
+            }).catch(error => { showLoader(false); teacherFeedback.textContent = `فشل الحفظ: ${error.message}`; teacherFeedback.className = 'text-red-600 font-bold'; });
         });
 
         function resetTeacherView() { teacherForm.reset(); teacherFeedback.textContent = ''; }
