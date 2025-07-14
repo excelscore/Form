@@ -64,10 +64,10 @@
         
         <div id="student-login" class="hidden text-center">
              <h2 class="text-2xl font-bold text-green-600 mb-4">دخول الطالب</h2>
-             <p class="text-gray-600 mb-6">الرجاء إدخال بيانات الاختبار للدخول.</p>
+             <p class="text-gray-600 mb-6">الرجاء اختيار بيانات الاختبار للدخول.</p>
              <div class="max-w-md mx-auto space-y-4">
-                <input type="text" id="subject-input" placeholder="اسم المادة" class="w-full p-3 border border-gray-300 rounded-md">
-                <input type="text" id="class-input" placeholder="اسم الصف" class="w-full p-3 border border-gray-300 rounded-md">
+                <select id="subject-select" class="w-full p-3 border border-gray-300 rounded-md"></select>
+                <select id="class-select" class="w-full p-3 border border-gray-300 rounded-md"></select>
                 <input type="password" id="exam-password-input" placeholder="كلمة سر الاختبار" class="w-full p-3 border border-gray-300 rounded-md">
              </div>
              <button onclick="findQuiz()" class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg mt-6">بحث عن الاختبار</button>
@@ -96,7 +96,8 @@
         <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري التحميل...</p></div>
     </div>
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx03fWochVke28in7VRX8QaY76Q10U68sY3MpQ4xgekVPuJGC5toCAM0GLtydSIHpbO-A/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXq4yQolNrFZCMmqaok9dmrTm04vVPJ7azuRNEcgx_dEiR5hm2_zgAkmQNZG7zSMMMKA/exec
+';
 
         const teachersData = [
             { name: "Alza Babu Manamil Thomas Babu", password: "999", sheetId: "1zZe5-ne-I3XKHpV87uB-l_Gfk-0dmiM1veMjL8yAsi0" },
@@ -130,6 +131,9 @@
             { name: "Tingo Babu", password: "775", sheetId: "1Ju5rAtmh2Fhl2U4oadliJXeBpxTIXsehSvq6SAApa4I" }
         ];
 
+        const subjects = ["اللغة العربية", "التربية الإسلامية", "الغة الإنجليزية", "الدراسات الاجتماعية", "الرياضيات", "العلوم", "الفيزياء", "الكيمياء", "الاحياء", "التربية البدنية والصحية", "الحوسبة والتصميم", "الفنون (فنية وموسيقى)", "ادارة اعمال"];
+        const classNames = ["الصف الأول", "الصف الثاني", "الصف الثالث", "الصف الرابع", "الصف الخامس", "الصف السادس", "الصف السابع", "الصف الثامن", "الصف التاسع", "الصف العاشر", "الصف الحادي عشر", "الصف الثاني عشر"];
+
         const views = ['home-screen', 'teacher-login', 'teacher-view', 'student-login', 'student-view'];
         const teacherForm = document.getElementById('quiz-form');
         const teacherFeedback = document.getElementById('teacher-feedback');
@@ -148,14 +152,23 @@
             teachersData.forEach((teacher, index) => {
                 teacherSelect.innerHTML += `<option value="${index}">${teacher.name}</option>`;
             });
+            const subjectSelect = document.getElementById('subject-select');
+            subjectSelect.innerHTML = '<option value="">-- اختر المادة --</option>';
+            subjects.forEach(s => { subjectSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+
+            const classSelect = document.getElementById('class-select');
+            classSelect.innerHTML = '<option value="">-- اختر الصف --</option>';
+            classNames.forEach(c => { classSelect.innerHTML += `<option value="${c}">${c}</option>`; });
         }
         window.onload = populateDropdowns;
 
         function generateTeacherForm() {
+            let subjectOptions = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+            let classOptions = classNames.map(c => `<option value="${c}">${c}</option>`).join('');
             let formHtml = `
                 <div class="grid md:grid-cols-3 gap-4 mb-8 border-b pb-6">
-                    <input type="text" id="subject" placeholder="اسم المادة" class="w-full p-3 border border-gray-300 rounded-md" required>
-                    <input type="text" id="className" placeholder="اسم الصف" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <select id="subject" class="w-full p-3 border border-gray-300 rounded-md" required><option value="">-- اختر المادة --</option>${subjectOptions}</select>
+                    <select id="className" class="w-full p-3 border border-gray-300 rounded-md" required><option value="">-- اختر الصف --</option>${classOptions}</select>
                     <input type="text" id="examPassword" placeholder="كلمة سر للاختبار" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
             `;
@@ -215,8 +228,8 @@
         });
 
         function findQuiz() {
-            const subject = document.getElementById('subject-input').value;
-            const className = document.getElementById('class-input').value;
+            const subject = document.getElementById('subject-select').value;
+            const className = document.getElementById('class-select').value;
             const password = document.getElementById('exam-password-input').value;
             const errorP = document.getElementById('student-login-error');
             errorP.textContent = '';
@@ -225,8 +238,7 @@
                 return;
             }
             showLoader(true);
-            const allSheetIds = teachersData.map(t => t.sheetId);
-            const url = `${WEB_APP_URL}?action=findQuiz&allSheetIds=${encodeURIComponent(JSON.stringify(allSheetIds))}&subject=${encodeURIComponent(subject)}&className=${encodeURIComponent(className)}&password=${encodeURIComponent(password)}`;
+            const url = `${WEB_APP_URL}?action=findQuiz&subject=${encodeURIComponent(subject)}&className=${encodeURIComponent(className)}&password=${encodeURIComponent(password)}`;
             
             fetch(url).then(res => res.json()).then(result => {
                 showLoader(false);
