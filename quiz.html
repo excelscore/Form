@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نموذج اختبار مدرسة مليحة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .hidden { display: none; }
+        .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/3 mx-auto">
+            <h3 class="text-xl font-bold mb-4">مطلوب كلمة المرور</h3>
+            <p class="mb-4">الرجاء إدخال كلمة مرور المعلمة للمتابعة.</p>
+            <input type="password" id="password-input" class="w-full p-2 border border-gray-300 rounded-md mb-2 text-left" dir="ltr">
+            <p id="password-error" class="text-red-500 text-sm mb-4 hidden">كلمة السر خاطئة. الرجاء المحاولة مرة أخرى.</p>
+            <div class="flex justify-end gap-4">
+                <button onclick="closePasswordModal()" class="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">إلغاء</button>
+                <button onclick="checkPassword()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">دخول</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container" class="container mx-auto p-4 md:p-8">
+        <div id="home-screen" class="text-center">
+            <img src="https://www.moe.gov.ae/ar/assets/images/logo.png" alt="شعار وزارة التربية والتعليم" class="mx-auto mb-6 h-24 w-auto object-contain">
+            <h1 class="text-2xl md:text-4xl font-bold text-blue-800 mb-2">مدرسة مليحة الحلقة الأولى والثانية والثالثة بنات</h1>
+            <h2 class="text-xl md:text-2xl font-semibold text-gray-700 mb-6">Maleeha School Cycle 1,2,3 for Girls</h2>
+            <div class="max-w-2xl mx-auto text-center">
+                <p class="text-lg text-gray-600 mb-2">مرحبًا بكم في نموذج الاختبار الإلكتروني.</p>
+                <p class="text-lg text-gray-600 mb-10">نرجو منكم قراءة الأسئلة بعناية والإجابة بدقة، مع تمنياتنا لكم بالتوفيق والنجاح 🌟</p>
+            </div>
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <button onclick="openPasswordModal()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300">خاص للمعلمة</button>
+                <button onclick="showView('student-view')" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300">خاص للطلاب</button>
+            </div>
+        </div>
+        <div id="teacher-view" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-blue-600">لوحة تحكم المعلمة - إضافة أسئلة</h2>
+                <button onclick="showView('home-screen')" class="text-sm text-blue-500 hover:underline">&larr; العودة للرئيسية</button>
+            </div>
+            <form id="quiz-form" class="bg-white p-6 rounded-lg shadow-md space-y-8">
+                <!-- Questions will be generated here -->
+            </form>
+            <div id="teacher-feedback" class="text-center mt-4 font-bold"></div>
+        </div>
+        <div id="student-view" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-bold text-green-600">صفحة الطالب - الاختبار</h2>
+                 <button onclick="showView('home-screen')" class="text-sm text-blue-500 hover:underline">&larr; العودة للرئيسية</button>
+            </div>
+            <div id="student-name-input" class="bg-white p-6 rounded-lg shadow-md text-center">
+                <h3 class="text-xl font-semibold mb-4">أدخل اسمك لبدء الاختبار</h3>
+                <input type="text" id="student-name" placeholder="اسمك الكامل" class="w-full md:w-1/2 mx-auto p-2 border border-gray-300 rounded-md mb-4" required>
+                <button onclick="startQuiz()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">بدء الاختبار</button>
+            </div>
+            <div id="quiz-container" class="hidden bg-white p-6 rounded-lg shadow-md space-y-6"></div>
+            <div id="student-result" class="hidden text-center mt-6 bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-2xl font-bold text-green-600">نتيجتك النهائية</h3>
+                <p id="score-display" class="text-4xl font-bold my-4"></p>
+                <button onclick="showView('home-screen')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">العودة للرئيسية</button>
+            </div>
+            <div id="student-feedback" class="text-center mt-4 font-bold"></div>
+        </div>
+        <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري التحميل...</p></div>
+    </div>
+    <script>
+        // الصق رابط تطبيق الويب (الذي ينتهي بـ /exec) هنا
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIXtn7nq4286u_8T4I1xUSEAadYodJ__q3rzVyMPmi9XCgq0n-eG-eLGpwQLQLXpFsfQ/exec';
+
+        const views = ['home-screen', 'teacher-view', 'student-view'];
+        const teacherForm = document.getElementById('quiz-form');
+        const teacherFeedback = document.getElementById('teacher-feedback');
+        const studentFeedback = document.getElementById('student-feedback');
+        const loader = document.getElementById('loader');
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('password-input');
+        const passwordError = document.getElementById('password-error');
+        let questionsData = [];
+
+        function generateTeacherForm() {
+            let formHtml = '';
+            for (let i = 1; i <= 3; i++) {
+                formHtml += `
+                <div class="question-block ${i < 3 ? 'border-b pb-6' : ''}">
+                    <h3 class="text-xl font-semibold mb-4">السؤال ${i}</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="q${i}" placeholder="اكتب نص السؤال ${i} هنا" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <input type="text" id="q${i}_opt1" placeholder="الخيار الأول" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <input type="text" id="q${i}_opt2" placeholder="الخيار الثاني" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <input type="text" id="q${i}_opt3" placeholder="الخيار الثالث" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <div class="flex items-center gap-4">
+                            <select id="q${i}_correct" class="p-2 border border-gray-300 rounded-md">
+                                <option value="1">الخيار الأول هو الصحيح</option>
+                                <option value="2">الخيار الثاني هو الصحيح</option>
+                                <option value="3">الخيار الثالث هو الصحيح</option>
+                            </select>
+                            <input type="number" id="q${i}_score" placeholder="علامة السؤال" class="w-32 p-2 border border-gray-300 rounded-md" required>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            formHtml += `<div class="text-center pt-4"><button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">حفظ الأسئلة</button></div>`;
+            teacherForm.innerHTML = formHtml;
+        }
+        generateTeacherForm();
+
+        function showView(viewId) { views.forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById(viewId).classList.remove('hidden'); if (viewId === 'home-screen') { resetStudentView(); resetTeacherView(); } }
+        function showLoader(show) { loader.classList.toggle('hidden', !show); }
+        function openPasswordModal() { passwordInput.value = ''; passwordError.classList.add('hidden'); passwordModal.classList.remove('hidden'); passwordInput.focus(); }
+        function closePasswordModal() { passwordModal.classList.add('hidden'); }
+        function checkPassword() { if (passwordInput.value === '0009') { closePasswordModal(); showView('teacher-view'); } else { passwordError.classList.remove('hidden'); passwordInput.value = ''; passwordInput.focus(); } }
+        passwordInput.addEventListener('keyup', e => { if (e.key === 'Enter') { e.preventDefault(); checkPassword(); } });
+        teacherForm.addEventListener('submit', e => {
+            e.preventDefault(); showLoader(true); teacherFeedback.textContent = '';
+            const data = { action: 'saveQuestions', questions: [] };
+            for (let i = 1; i <= 3; i++) { data.questions.push({ q: document.getElementById(`q${i}`).value, opt1: document.getElementById(`q${i}_opt1`).value, opt2: document.getElementById(`q${i}_opt2`).value, opt3: document.getElementById(`q${i}_opt3`).value, correct: document.getElementById(`q${i}_correct`).value, score: document.getElementById(`q${i}_score`).value }); }
+            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', cache: 'no-cache', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), redirect: 'follow' })
+                .then(response => { showLoader(false); teacherFeedback.textContent = 'تم إرسال طلب الحفظ بنجاح!'; teacherFeedback.className = 'text-green-600 font-bold'; teacherForm.reset(); })
+                .catch(error => { showLoader(false); teacherFeedback.textContent = `فشل الإرسال: ${error.message}`; teacherFeedback.className = 'text-red-600 font-bold'; });
+        });
+        function resetTeacherView() { teacherForm.reset(); teacherFeedback.textContent = ''; }
+        function startQuiz() {
+            const studentName = document.getElementById('student-name').value;
+            if (!studentName.trim()) { alert('الرجاء إدخال اسمك.'); return; }
+            document.getElementById('student-name-input').classList.add('hidden'); showLoader(true); studentFeedback.textContent = '';
+            fetch(`${WEB_APP_URL}?action=getQuestions`).then(res => res.json()).then(data => {
+                showLoader(false);
+                if (data.status === 'success' && data.questions.length > 0) { questionsData = data.questions; displayQuiz(questionsData); } else { throw new Error(data.message || 'لا توجد أسئلة متاحة.'); }
+            }).catch(error => { showLoader(false); studentFeedback.textContent = `فشل تحميل الاختبار: ${error.message}`; studentFeedback.className = 'text-red-600 font-bold'; document.getElementById('student-name-input').classList.remove('hidden'); });
+        }
+        function displayQuiz(questions) {
+            const quizContainer = document.getElementById('quiz-container'); quizContainer.innerHTML = '';
+            questions.forEach((q, index) => { const questionDiv = document.createElement('div'); questionDiv.className = 'question-block border-b pb-4'; questionDiv.innerHTML = `<p class="font-semibold text-lg mb-3">${index + 1}. ${q.question}</p><div class="space-y-2"><div><input type="radio" id="q${index}_opt1" name="q${index}" value="1"><label for="q${index}_opt1" class="mr-2">${q.options[0]}</label></div><div><input type="radio" id="q${index}_opt2" name="q${index}" value="2"><label for="q${index}_opt2" class="mr-2">${q.options[1]}</label></div><div><input type="radio" id="q${index}_opt3" name="q${index}" value="3"><label for="q${index}_opt3" class="mr-2">${q.options[2]}</label></div></div>`; quizContainer.appendChild(questionDiv); });
+            const submitButton = document.createElement('button'); submitButton.textContent = 'إرسال الإجابات'; submitButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg mt-4'; submitButton.onclick = submitAnswers; quizContainer.appendChild(submitButton); quizContainer.classList.remove('hidden');
+        }
+        function submitAnswers() {
+            let totalScore = 0, maxScore = 0; const selectedAnswers = [];
+            questionsData.forEach((q, index) => { const selectedOption = document.querySelector(`input[name="q${index}"]:checked`); maxScore += q.score; if (selectedOption) { selectedAnswers.push(selectedOption.value); if (selectedOption.value == q.correct) { totalScore += q.score; } } else { selectedAnswers.push("لم تتم الإجابة"); } });
+            document.getElementById('quiz-container').classList.add('hidden'); document.getElementById('score-display').textContent = `${totalScore} / ${maxScore}`; document.getElementById('student-result').classList.remove('hidden');
+            saveStudentResult(totalScore, selectedAnswers);
+        }
+        function saveStudentResult(score, answers) {
+            const studentName = document.getElementById('student-name').value;
+            const url = `${WEB_APP_URL}?action=saveAnswer&name=${encodeURIComponent(studentName)}&score=${score}&answers=${encodeURIComponent(JSON.stringify(answers))}`;
+            fetch(url).then(res => res.json()).then(data => { if (data.status !== 'success') { console.error('فشل حفظ النتيجة:', data.message); } }).catch(error => console.error('خطأ في الشبكة عند حفظ النتيجة:', error));
+        }
+        function resetStudentView() { document.getElementById('student-name').value = ''; document.getElementById('student-name-input').classList.remove('hidden'); document.getElementById('quiz-container').classList.add('hidden'); document.getElementById('student-result').classList.add('hidden'); studentFeedback.textContent = ''; questionsData = []; }
+    </script>
+</body>
+</html>
