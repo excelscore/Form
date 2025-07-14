@@ -99,7 +99,7 @@
         // ----------------------------------------------------
         //  ✅  تم إضافة الرابط الذي أرسلته هنا  ✅
         // ----------------------------------------------------
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXq4yQolNrFZCMmqaok9dmrTm04vVPJ7azuRNEcgx_dEiR5hm2_zgAkmQNZG7zSMMMKA/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7iRN1VGSRz05_BvTwUGApUwQ9yWBtRmIphvyEfdBUVI9-Gu9VEgSQpQ7rAEIUKvLXPA/exec';
 
         const teachersData = [
             { name: "Alza Babu Manamil Thomas Babu", password: "999", sheetId: "1zZe5-ne-I3XKHpV87uB-l_Gfk-0dmiM1veMjL8yAsi0" },
@@ -288,6 +288,10 @@
             document.getElementById('quiz-container').classList.add('hidden');
             document.getElementById('student-result').classList.add('hidden');
             studentFeedback.textContent = '';
+            document.getElementById('subject-select').value = "";
+            document.getElementById('class-select').value = "";
+            document.getElementById('exam-password-input').value = "";
+            document.getElementById('student-login-error').textContent = "";
             teacherForm.innerHTML = '';
             teacherFeedback.textContent = '';
             questionsData = [];
