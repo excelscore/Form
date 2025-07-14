@@ -48,9 +48,7 @@
                 <h2 class="text-2xl font-bold text-blue-600">لوحة تحكم المعلمة - إضافة أسئلة</h2>
                 <button onclick="showView('home-screen')" class="text-sm text-blue-500 hover:underline">&larr; العودة للرئيسية</button>
             </div>
-            <form id="quiz-form" class="bg-white p-6 rounded-lg shadow-md space-y-8">
-                <!-- Questions will be generated here -->
-            </form>
+            <form id="quiz-form" class="bg-white p-6 rounded-lg shadow-md space-y-8"></form>
             <div id="teacher-feedback" class="text-center mt-4 font-bold"></div>
         </div>
         <div id="student-view" class="hidden">
@@ -74,8 +72,7 @@
         <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري التحميل...</p></div>
     </div>
     <script>
-        // الصق رابط تطبيق الويب (الذي ينتهي بـ /exec) هنا
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIXtn7nq4286u_8T4I1xUSEAadYodJ__q3rzVyMPmi9XCgq0n-eG-eLGpwQLQLXpFsfQ/exec';
+        const WEB_APP_URL = 'الصق_رابط_جوجل_سكربت_هنا';
 
         const views = ['home-screen', 'teacher-view', 'student-view'];
         const teacherForm = document.getElementById('quiz-form');
@@ -90,24 +87,7 @@
         function generateTeacherForm() {
             let formHtml = '';
             for (let i = 1; i <= 3; i++) {
-                formHtml += `
-                <div class="question-block ${i < 3 ? 'border-b pb-6' : ''}">
-                    <h3 class="text-xl font-semibold mb-4">السؤال ${i}</h3>
-                    <div class="space-y-4">
-                        <input type="text" id="q${i}" placeholder="اكتب نص السؤال ${i} هنا" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <input type="text" id="q${i}_opt1" placeholder="الخيار الأول" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <input type="text" id="q${i}_opt2" placeholder="الخيار الثاني" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <input type="text" id="q${i}_opt3" placeholder="الخيار الثالث" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <div class="flex items-center gap-4">
-                            <select id="q${i}_correct" class="p-2 border border-gray-300 rounded-md">
-                                <option value="1">الخيار الأول هو الصحيح</option>
-                                <option value="2">الخيار الثاني هو الصحيح</option>
-                                <option value="3">الخيار الثالث هو الصحيح</option>
-                            </select>
-                            <input type="number" id="q${i}_score" placeholder="علامة السؤال" class="w-32 p-2 border border-gray-300 rounded-md" required>
-                        </div>
-                    </div>
-                </div>`;
+                formHtml += `<div class="question-block ${i < 3 ? 'border-b pb-6' : ''}"><h3 class="text-xl font-semibold mb-4">السؤال ${i}</h3><div class="space-y-4"><input type="text" id="q${i}" placeholder="اكتب نص السؤال ${i} هنا" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt1" placeholder="الخيار الأول" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt2" placeholder="الخيار الثاني" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt3" placeholder="الخيار الثالث" class="w-full p-2 border border-gray-300 rounded-md" required><div class="flex items-center gap-4"><select id="q${i}_correct" class="p-2 border border-gray-300 rounded-md"><option value="1">الخيار الأول هو الصحيح</option><option value="2">الخيار الثاني هو الصحيح</option><option value="3">الخيار الثالث هو الصحيح</option></select><input type="number" id="q${i}_score" placeholder="علامة السؤال" class="w-32 p-2 border border-gray-300 rounded-md" required></div></div></div>`;
             }
             formHtml += `<div class="text-center pt-4"><button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">حفظ الأسئلة</button></div>`;
             teacherForm.innerHTML = formHtml;
@@ -120,14 +100,32 @@
         function closePasswordModal() { passwordModal.classList.add('hidden'); }
         function checkPassword() { if (passwordInput.value === '0009') { closePasswordModal(); showView('teacher-view'); } else { passwordError.classList.remove('hidden'); passwordInput.value = ''; passwordInput.focus(); } }
         passwordInput.addEventListener('keyup', e => { if (e.key === 'Enter') { e.preventDefault(); checkPassword(); } });
+        
         teacherForm.addEventListener('submit', e => {
             e.preventDefault(); showLoader(true); teacherFeedback.textContent = '';
             const data = { action: 'saveQuestions', questions: [] };
             for (let i = 1; i <= 3; i++) { data.questions.push({ q: document.getElementById(`q${i}`).value, opt1: document.getElementById(`q${i}_opt1`).value, opt2: document.getElementById(`q${i}_opt2`).value, opt3: document.getElementById(`q${i}_opt3`).value, correct: document.getElementById(`q${i}_correct`).value, score: document.getElementById(`q${i}_score`).value }); }
-            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', cache: 'no-cache', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), redirect: 'follow' })
-                .then(response => { showLoader(false); teacherFeedback.textContent = 'تم إرسال طلب الحفظ بنجاح!'; teacherFeedback.className = 'text-green-600 font-bold'; teacherForm.reset(); })
-                .catch(error => { showLoader(false); teacherFeedback.textContent = `فشل الإرسال: ${error.message}`; teacherFeedback.className = 'text-red-600 font-bold'; });
+            
+            // تم تصحيح هذا الجزء
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+                .then(response => response.json())
+                .then(result => {
+                    showLoader(false);
+                    if (result.status === 'success') {
+                        teacherFeedback.textContent = 'تم حفظ الأسئلة بنجاح!';
+                        teacherFeedback.className = 'text-green-600 font-bold';
+                        teacherForm.reset();
+                    } else {
+                        throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
+                    }
+                })
+                .catch(error => {
+                    showLoader(false);
+                    teacherFeedback.textContent = `فشل الحفظ: ${error.message}`;
+                    teacherFeedback.className = 'text-red-600 font-bold';
+                });
         });
+
         function resetTeacherView() { teacherForm.reset(); teacherFeedback.textContent = ''; }
         function startQuiz() {
             const studentName = document.getElementById('student-name').value;
