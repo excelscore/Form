@@ -267,21 +267,21 @@
             if (!studentName.trim()) { alert('الرجاء إدخال اسمك.'); return; }
             showLoader(true);
             
-            const checkUrl = `${WEB_APP_URL}?action=checkIfStudentExists&sheetId=${currentSheetId}&name=${encodeURIComponent(studentName)}`;
-            fetch(checkUrl).then(res => res.json()).then(result => {
-                if (result.exists) {
-                    showLoader(false);
-                    errorP.textContent = 'لقد قمت بحل هذا الاختبار من قبل. لا يمكنك حله مرة أخرى.';
-                } else {
-                    document.getElementById('student-name-input').classList.add('hidden');
-                    fetch(`${WEB_APP_URL}?action=getQuestions&sheetId=${currentSheetId}`).then(res => res.json()).then(data => {
-                        showLoader(false);
-                        if (data.status === 'success' && data.questions.length > 0) { questionsData = data.questions; displayQuiz(data.questions); } else { throw new Error(data.message || 'لا توجد أسئلة متاحة.'); }
-                    }).catch(error => { showLoader(false); studentFeedback.textContent = `فشل تحميل الاختبار: ${error.message}`; studentFeedback.className = 'text-red-600 font-bold'; document.getElementById('student-name-input').classList.remove('hidden'); });
-                }
-            }).catch(error => {
+            const url = `${WEB_APP_URL}?action=getQuestions&sheetId=${currentSheetId}&name=${encodeURIComponent(studentName)}`;
+            
+            fetch(url).then(res => res.json()).then(data => {
                 showLoader(false);
-                errorP.textContent = `حدث خطأ أثناء التحقق من الاسم: ${error.message}`;
+                if (data.status === 'success') {
+                    document.getElementById('student-name-input').classList.add('hidden');
+                    questionsData = data.questions; 
+                    displayQuiz(data.questions); 
+                } else {
+                    errorP.textContent = data.message;
+                }
+            }).catch(error => { 
+                showLoader(false); 
+                studentFeedback.textContent = `فشل تحميل الاختبار: ${error.message}`; 
+                studentFeedback.className = 'text-red-600 font-bold';
             });
         }
 
