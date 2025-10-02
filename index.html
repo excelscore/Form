@@ -33,6 +33,8 @@
             <h2 id="form-title" class="text-2xl font-bold text-green-600 mb-6">إدخال طلب جديد</h2>
             
             <form id="order-form" class="space-y-4">
+                <input type="hidden" id="rowIndex" value="">
+                
                 <div class="grid md:grid-cols-2 gap-4">
                     <input type="text" id="clientName" placeholder="* اسم العميل" class="w-full p-3 border border-gray-300 rounded-md" required>
                     <input type="text" id="region" placeholder="* المنطقة" class="w-full p-3 border border-gray-300 rounded-md" required>
@@ -73,7 +75,6 @@
     </div>
 
     <script>
-        // رابط تطبيق الويب الخاص بك
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
         
         const loader = document.getElementById('loader');
@@ -164,7 +165,7 @@
             return details.join(' || '); 
         }
         
-        // دالة حفظ وتعديل الطلب (لم تتغير)
+        // دالة حفظ وتعديل الطلب (تم تعديلها لقراءة ID)
         function saveOrder(isUpdate = false) {
             const phoneNumber = document.getElementById('phoneNumber').value;
             if (!phoneNumber) { 
@@ -176,10 +177,12 @@
             showLoader(true);
 
             const orderDetails = collectOrderDetails();
+            const rowIndexValue = document.getElementById('rowIndex').value; // 🚨 قراءة الـ ID
 
             const params = {
                 action: 'saveOrder',
                 isUpdate: isUpdate,
+                orderIndex: rowIndexValue, // 🚨 إرسال الـ ID إلى Apps Script
                 clientName: document.getElementById('clientName').value,
                 region: document.getElementById('region').value,
                 phone: phoneNumber,
@@ -214,7 +217,7 @@
                 });
         }
         
-        // دالة البحث عن الطلب (لم تتغير)
+        // دالة البحث عن الطلب (لا تحتاج تعديل جوهري)
         function searchOrder() {
             const searchInput = document.getElementById('search-input').value.trim();
             searchFeedback.textContent = '';
@@ -258,6 +261,9 @@
         function populateFormForUpdate(order) {
             formTitle.textContent = 'تعديل بيانات الطلب الحالي';
             
+            // 🚨🚨🚨 هنا الجزء الأهم: قراءة الـ ID من المفتاح "row index" وتخزينه
+            document.getElementById('rowIndex').value = order['row index'] || '';
+
             // تعبئة الحقول الأساسية
             document.getElementById('clientName').value = order['اسم العميل'] || '';
             document.getElementById('region').value = order['المنطقة'] || '';
@@ -266,23 +272,17 @@
             document.getElementById('deliveryDate').value = formatDate(order['التاريخ المتوقع للتسليم']) || '';
             document.getElementById('notes').value = order['ملاحظات'] || '';
 
-            // 🌟🌟🌟 أهم جزء - تعبئة تفاصيل الأوردر 🌟🌟🌟
-            orderDetailsContainer.innerHTML = ''; // تفريغ الحقول السابقة
-            
-            // نستخدم المفتاح الدقيق: 'تفاصيل الاوردر'
+            // تعبئة تفاصيل الأوردر
+            orderDetailsContainer.innerHTML = '';
             const allDetailsString = order['تفاصيل الاوردر'] || '';
-            
-            // نقسم السلسلة بناءً على الفاصل ' || '
             const detailsArray = allDetailsString.split(' || ').filter(d => d.trim() !== '');
             
             if (detailsArray.length > 0) {
-                // إذا وجدنا تفاصيل، ننشئ حقلاً لكل تفصيل
                 detailsArray.forEach(detail => addOrderDetailField(detail.trim()));
             } else {
-                 // إذا لم نجد أي تفاصيل، ننشئ حقل إدخال واحد فارغ
                  addOrderDetailField('');
             }
-            adjustAddMoreButton(); // ضبط زر "إضافة المزيد"
+            adjustAddMoreButton();
             
             // إظهار زر التعديل وإخفاء زر الحفظ
             submitButton.classList.add('hidden');
@@ -299,6 +299,9 @@
             formFeedback.textContent = '';
             document.getElementById('search-input').value = '';
             searchFeedback.textContent = '';
+            
+            // 🚨 مسح قيمة الـ ID المخزنة
+            document.getElementById('rowIndex').value = '';
             
             // إعادة ضبط حقول تفاصيل الأوردر
             orderDetailsContainer.innerHTML = '';
