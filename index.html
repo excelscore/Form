@@ -101,17 +101,14 @@
             `;
 
             if (isFirst && !detail) {
-                // الزر الأول يكون "إضافة المزيد"
                 fieldHtml += `<button type="button" onclick="addOrderDetailField()" class="bg-blue-500 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap">إضافة المزيد</button>`;
             } else {
-                // باقي الأزرار تكون "حذف"
                 fieldHtml += `<button type="button" onclick="this.parentNode.remove(); adjustAddMoreButton()" class="bg-red-500 hover:bg-red-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap">حذف</button>`;
             }
             
             newFieldDiv.innerHTML = fieldHtml;
             container.appendChild(newFieldDiv);
 
-            // نعدل زر الإضافة/الحذف في الحقل الأول فقط في حالة إضافة حقل جديد يدوياً
             if (isFirst && !detail) {
                 const firstButton = newFieldDiv.querySelector('button');
                 if (firstButton) {
@@ -122,13 +119,11 @@
             }
         }
         
-        // دالة لضمان وجود زر "إضافة المزيد" عند وجود حقل واحد فقط
         function adjustAddMoreButton() {
             const container = orderDetailsContainer;
             if (container.children.length === 0) {
-                 addOrderDetailField(); // نرجع الحقل الأساسي مع زر الإضافة
+                 addOrderDetailField(); 
             }
-             // التأكد من أن الحقل الأول يحتوي على زر "إضافة المزيد" إذا كان هو الوحيد
              if (container.children.length === 1) {
                  const firstField = container.querySelector('.input-group');
                  const currentButton = firstField.querySelector('button');
@@ -140,18 +135,15 @@
              }
         }
 
-        // تهيئة حقل تفاصيل الأوردر عند تحميل الصفحة
         window.onload = () => {
              addOrderDetailField();
         };
 
         orderForm.addEventListener('submit', e => {
             e.preventDefault();
-            if (!updateButton.classList.contains('hidden')) {
-                saveOrder(true);
-            } else {
-                saveOrder(false);
-            }
+            // نتحقق مما إذا كان زر التعديل مرئياً
+            const isUpdate = !updateButton.classList.contains('hidden');
+            saveOrder(isUpdate); 
         });
 
         function collectOrderDetails() {
@@ -161,11 +153,10 @@
                     details.push(input.value.trim());
                 }
             });
-            // نستخدم ' || ' للفصل بين التفاصيل
             return details.join(' || '); 
         }
         
-        // دالة حفظ وتعديل الطلب (تم تعديلها لقراءة ID)
+        // دالة حفظ وتعديل الطلب (تم إصلاح منطق إعادة التعيين)
         function saveOrder(isUpdate = false) {
             const phoneNumber = document.getElementById('phoneNumber').value;
             if (!phoneNumber) { 
@@ -177,12 +168,13 @@
             showLoader(true);
 
             const orderDetails = collectOrderDetails();
-            const rowIndexValue = document.getElementById('rowIndex').value; // 🚨 قراءة الـ ID
+            // 🚨 قراءة الـ ID من الحقل المخفي (يرسل كـ searchIndex للـ Apps Script)
+            const indexValue = document.getElementById('rowIndex').value; 
 
             const params = {
                 action: 'saveOrder',
                 isUpdate: isUpdate,
-                orderIndex: rowIndexValue, // 🚨 إرسال الـ ID إلى Apps Script
+                searchIndex: indexValue, // 🚨 إرسال الـ ID إلى Apps Script
                 clientName: document.getElementById('clientName').value,
                 region: document.getElementById('region').value,
                 phone: phoneNumber,
@@ -205,7 +197,15 @@
                     if (result.status === 'success') {
                         formFeedback.textContent = result.message;
                         formFeedback.className = 'text-green-600 font-bold mt-4';
-                        resetForm(); 
+                        
+                        // 🚨 الحل: لا تقم بإعادة تعيين النموذج بعد التعديل الناجح.
+                        if (isUpdate === false) { 
+                            resetForm(); // إعادة تعيين بعد حفظ طلب جديد
+                        } else {
+                            // إذا كان تعديلاً ناجحاً، نبقى في وضع التعديل ونحدث رسائل البحث
+                            searchFeedback.textContent = `تم تحديث البيانات بنجاح للعميل: ${document.getElementById('clientName').value}.`;
+                            searchFeedback.className = 'text-green-600 font-semibold mt-3';
+                        }
                     } else {
                         throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
                     }
@@ -217,7 +217,6 @@
                 });
         }
         
-        // دالة البحث عن الطلب (لا تحتاج تعديل جوهري)
         function searchOrder() {
             const searchInput = document.getElementById('search-input').value.trim();
             searchFeedback.textContent = '';
@@ -255,13 +254,10 @@
                 });
         }
 
-        /**
-         * دالة تعبئة النموذج بعد البحث - تم تحسين طريقة معالجة تفاصيل الأوردر
-         */
         function populateFormForUpdate(order) {
             formTitle.textContent = 'تعديل بيانات الطلب الحالي';
             
-            // 🚨🚨🚨 هنا الجزء الأهم: قراءة الـ ID من المفتاح "row index" وتخزينه
+            // 🚨🚨 تخزين الـ ID في الحقل المخفي
             document.getElementById('rowIndex').value = order['row index'] || '';
 
             // تعبئة الحقول الأساسية
@@ -292,7 +288,7 @@
             formFeedback.textContent = '';
         }
 
-        // دالة لإعادة تعيين النموذج إلى وضع "طلب جديد"
+        // دالة لإعادة تعيين النموذج إلى وضع "طلب جديد" (تستدعى عند الحفظ الجديد أو الإلغاء)
         function resetForm() {
             orderForm.reset();
             formTitle.textContent = 'إدخال طلب جديد';
@@ -301,7 +297,7 @@
             searchFeedback.textContent = '';
             
             // 🚨 مسح قيمة الـ ID المخزنة
-            document.getElementById('rowIndex').value = '';
+            document.getElementById('rowIndex').value = ''; 
             
             // إعادة ضبط حقول تفاصيل الأوردر
             orderDetailsContainer.innerHTML = '';
