@@ -33,7 +33,10 @@
             <h2 id="form-title" class="text-2xl font-bold text-green-600 mb-6">إدخال طلب جديد</h2>
             
             <form id="order-form" class="space-y-4">
-                <input type="hidden" id="rowIndex" value="">
+                <div id="orderIdDisplay" class="mb-4 hidden">
+                    <label for="orderId" class="text-sm font-semibold text-gray-700">معرّف الطلب (ID):</label>
+                    <input type="text" id="orderId" class="w-full p-3 border border-gray-300 bg-gray-50 rounded-md mt-1" readonly>
+                </div>
                 
                 <div class="grid md:grid-cols-2 gap-4">
                     <input type="text" id="clientName" placeholder="* اسم العميل" class="w-full p-3 border border-gray-300 rounded-md" required>
@@ -86,6 +89,9 @@
         const updateButton = document.getElementById('update-button');
         const cancelButton = document.getElementById('cancel-update-button');
         const formTitle = document.getElementById('form-title');
+        // 🚨 العناصر الجديدة
+        const orderIdDisplay = document.getElementById('orderIdDisplay');
+        const orderIdInput = document.getElementById('orderId'); 
 
         function showLoader(show) { loader.classList.toggle('hidden', !show); }
 
@@ -156,7 +162,7 @@
             return details.join(' || '); 
         }
         
-        // دالة حفظ وتعديل الطلب (تم إصلاح منطق إعادة التعيين)
+        // دالة حفظ وتعديل الطلب
         function saveOrder(isUpdate = false) {
             const phoneNumber = document.getElementById('phoneNumber').value;
             if (!phoneNumber) { 
@@ -168,8 +174,8 @@
             showLoader(true);
 
             const orderDetails = collectOrderDetails();
-            // 🚨 قراءة الـ ID من الحقل المخفي (يرسل كـ searchIndex للـ Apps Script)
-            const indexValue = document.getElementById('rowIndex').value; 
+            // 🚨 قراءة الـ ID من الحقل المرئي الجديد
+            const indexValue = orderIdInput.value; 
 
             const params = {
                 action: 'saveOrder',
@@ -198,11 +204,10 @@
                         formFeedback.textContent = result.message;
                         formFeedback.className = 'text-green-600 font-bold mt-4';
                         
-                        // 🚨 الحل: لا تقم بإعادة تعيين النموذج بعد التعديل الناجح.
                         if (isUpdate === false) { 
-                            resetForm(); // إعادة تعيين بعد حفظ طلب جديد
+                            resetForm(); 
                         } else {
-                            // إذا كان تعديلاً ناجحاً، نبقى في وضع التعديل ونحدث رسائل البحث
+                            // إذا كان تعديلاً ناجحاً، نبقى في وضع التعديل
                             searchFeedback.textContent = `تم تحديث البيانات بنجاح للعميل: ${document.getElementById('clientName').value}.`;
                             searchFeedback.className = 'text-green-600 font-semibold mt-3';
                         }
@@ -257,8 +262,9 @@
         function populateFormForUpdate(order) {
             formTitle.textContent = 'تعديل بيانات الطلب الحالي';
             
-            // 🚨🚨 تخزين الـ ID في الحقل المخفي
-            document.getElementById('rowIndex').value = order['row index'] || '';
+            // 🚨🚨 تخزين الـ ID في الحقل المرئي وعرضه
+            orderIdInput.value = order['row index'] || '';
+            orderIdDisplay.classList.remove('hidden');
 
             // تعبئة الحقول الأساسية
             document.getElementById('clientName').value = order['اسم العميل'] || '';
@@ -296,9 +302,10 @@
             document.getElementById('search-input').value = '';
             searchFeedback.textContent = '';
             
-            // 🚨 مسح قيمة الـ ID المخزنة
-            document.getElementById('rowIndex').value = ''; 
-            
+            // 🚨 مسح قيمة الـ ID المخزنة وإخفاء الحقل
+            orderIdInput.value = ''; 
+            orderIdDisplay.classList.add('hidden');
+
             // إعادة ضبط حقول تفاصيل الأوردر
             orderDetailsContainer.innerHTML = '';
             addOrderDetailField(); 
