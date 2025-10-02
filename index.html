@@ -3,322 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نموذج اختبار مدرسة مليحة</title>
+    <title>نظام إدارة الطلبات</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Cairo', sans-serif; } .hidden { display: none; }
+        body { font-family: 'Cairo', sans-serif; } 
+        .hidden { display: none; }
         .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .input-group { display: flex; align-items: flex-start; gap: 8px; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/3 mx-auto">
-            <h3 id="password-modal-title" class="text-xl font-bold mb-4">مطلوب كلمة المرور</h3>
-            <p class="mb-4">الرجاء إدخال كلمة المرور للمتابعة.</p>
-            <input type="password" id="password-input" class="w-full p-2 border border-gray-300 rounded-md mb-2 text-left" dir="ltr">
-            <p id="password-error" class="text-red-500 text-sm mb-4 hidden">كلمة السر خاطئة. الرجاء المحاولة مرة أخرى.</p>
-            <div class="flex justify-end gap-4">
-                <button onclick="closePasswordModal()" class="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">إلغاء</button>
-                <button onclick="checkPassword()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">دخول</button>
-            </div>
-        </div>
-    </div>
+    <div id="main-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <h1 class="text-3xl md:text-4xl font-bold text-blue-800 text-center mb-8">نظام إدخال وتعديل الطلبات 📝</h1>
 
-    <div id="main-container" class="container mx-auto p-4 md:p-8">
-        <div id="home-screen" class="text-center">
-            <img src="https://www.moe.gov.ae/ar/assets/images/logo.png" alt="شعار وزارة التربية والتعليم" class="mx-auto mb-6 h-24 w-auto object-contain">
-            <h1 class="text-2xl md:text-4xl font-bold text-blue-800 mb-2">مدرسة مليحة الحلقة الأولى والثانية والثالثة بنات</h1>
-            <h2 class="text-xl md:text-2xl font-semibold text-gray-700 mb-6">Maleeha School Cycle 1,2,3 for Girls</h2>
-            <div class="max-w-2xl mx-auto text-center">
-                <p class="text-lg text-gray-600 mb-2">مرحبًا بكم في نموذج الاختبار الإلكتروني.</p>
-                <p class="text-lg text-gray-600 mb-10">نرجو منكم قراءة الأسئلة بعناية والإجابة بدقة، مع تمنياتنا لكم بالتوفيق والنجاح 🌟</p>
+        <div id="search-view" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-bold text-gray-700 mb-4">البحث عن طلب لتعديله</h2>
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="search-input" placeholder="أدخل رقم الهاتف أو جزء من اسم العميل" class="flex-grow p-3 border border-gray-300 rounded-md text-left" dir="auto">
+                <button onclick="searchOrder()" class="bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300">بحث 🔎</button>
             </div>
-            <div class="flex flex-col md:flex-row justify-center gap-4">
-                <button onclick="showView('teacher-login')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300">خاص للمعلمة</button>
-                <button onclick="showView('student-login')" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300">خاص للطلاب</button>
-            </div>
+            <p id="search-feedback" class="text-sm mt-3 font-semibold"></p>
         </div>
 
-        <div id="teacher-login" class="hidden text-center">
-            <h2 class="text-2xl font-bold text-blue-600 mb-4">دخول المعلمة</h2>
-            <p class="text-gray-600 mb-6">الرجاء اختيار اسمك من القائمة.</p>
-            <select id="teacher-select" class="w-full md:w-1/2 mx-auto p-3 border border-gray-300 rounded-md mb-4">
-                <option value="">-- الرجاء اختيار المعلمة --</option>
-            </select>
-            <button onclick="promptTeacherPassword()" class="bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-lg">التالي</button>
-            <button onclick="showView('home-screen')" class="text-sm text-gray-500 hover:underline mt-4 block mx-auto">&larr; العودة للرئيسية</button>
-        </div>
-
-        <div id="teacher-view" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="teacher-view-title" class="text-2xl font-bold text-blue-600">لوحة تحكم المعلمة</h2>
-                <button onclick="showView('home-screen')" class="text-sm text-blue-500 hover:underline">&larr; العودة للرئيسية</button>
-            </div>
-            <form id="quiz-form" class="bg-white p-6 rounded-lg shadow-md space-y-8"></form>
-            <div id="teacher-feedback" class="text-center mt-4 font-bold"></div>
-        </div>
-        
-        <div id="student-login" class="hidden text-center">
-             <h2 class="text-2xl font-bold text-green-600 mb-4">دخول الطالب</h2>
-             <p class="text-gray-600 mb-6">الرجاء اختيار بيانات الاختبار للدخول.</p>
-             <div class="max-w-md mx-auto space-y-4">
-                <select id="subject-select" class="w-full p-3 border border-gray-300 rounded-md"></select>
-                <select id="class-select" class="w-full p-3 border border-gray-300 rounded-md"></select>
-                <input type="password" id="exam-password-input" placeholder="كلمة سر الاختبار" class="w-full p-3 border border-gray-300 rounded-md">
-             </div>
-             <button onclick="findQuiz()" class="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg mt-6">بحث عن الاختبار</button>
-             <button onclick="showView('home-screen')" class="text-sm text-gray-500 hover:underline mt-4 block mx-auto">&larr; العودة للرئيسية</button>
-             <p id="student-login-error" class="text-red-500 mt-4 font-bold"></p>
-        </div>
-
-        <div id="student-view" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                 <h2 id="student-view-title" class="text-2xl font-bold text-green-600">صفحة الطالب - الاختبار</h2>
-                 <button onclick="showView('home-screen')" class="text-sm text-blue-500 hover:underline">&larr; العودة للرئيسية</button>
-            </div>
-            <div id="student-name-input" class="bg-white p-6 rounded-lg shadow-md text-center">
-                <h3 class="text-xl font-semibold mb-4">أدخل اسمك لبدء الاختبار</h3>
-                <input type="text" id="student-name" placeholder="اسمك الكامل" class="w-full md:w-1/2 mx-auto p-2 border border-gray-300 rounded-md mb-4" required>
-                <button onclick="startQuiz()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">بدء الاختبار</button>
-                <p id="student-name-error" class="text-red-600 mt-4 font-bold"></p>
-            </div>
-            <div id="quiz-container" class="hidden bg-white p-6 rounded-lg shadow-md space-y-6"></div>
-            <div id="student-result" class="hidden text-center mt-6 bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-2xl font-bold text-green-600">نتيجتك النهائية</h3>
-                <p id="score-display" class="text-4xl font-bold my-4"></p>
-                <button onclick="showView('home-screen')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">العودة للرئيسية</button>
-            </div>
-            <div id="student-feedback" class="text-center mt-4 font-bold"></div>
-        </div>
-        <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري التحميل...</p></div>
-    </div>
-    <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw7iRN1VGSRz05_BvTwUGApUwQ9yWBtRmIphvyEfdBUVI9-Gu9VEgSQpQ7rAEIUKvLXPA/exec';
-
-        const teachersData = [
-            { name: "Alza Babu Manamil Thomas Babu", password: "999", sheetId: "1zZe5-ne-I3XKHpV87uB-l_Gfk-0dmiM1veMjL8yAsi0" },
-            { name: "amneh awad", password: "991", sheetId: "11a7YK2AIzZZ9f0iJfd9MwuNOhgKzJby5w41L6uzBS4k" },
-            { name: "Aysha Jumaa", password: "983", sheetId: "18rjlmWKyuR56of_0YnJGjgcpgJuCrKX-cUpuMIwSN00" },
-            { name: "Azza Abdullah", password: "975", sheetId: "1yNnqe-AvuqYUNk926_9SMo6Sx8ExUjwQXBSsTmhFmvI" },
-            { name: "batoul khalil mahmoud", password: "967", sheetId: "11dFkIjo9X92rseqF3Gapm7CM2_vsI42MQ7YohWyJnog" },
-            { name: "Debiti Akara Vitel", password: "959", sheetId: "1O6JMLZexc5vFrc_a4jznFa4d53HLwh66oRiL-8dpdHE" },
-            { name: "fadia gasem", password: "951", sheetId: "1h_gFZD6-jV_Y4pi-UVaqqcP1kgG0ZjUaQKgI0WRPCXo" },
-            { name: "ghada obaed", password: "943", sheetId: "13bVojODlqgHXR3fQHxcK5hqO_UIgfFFTcdt2X5cSO0A" },
-            { name: "halima ahmad", password: "935", sheetId: "1mV5tbW7Mpk-0B7AU7ZfC0j43Cgf6XCC_h44f5GOaPLg" },
-            { name: "iman hamad", password: "927", sheetId: "1k6qwtdJ7S4-bgkdcyyF8Y8oBoxbDQCeyWCaLLL061rc" },
-            { name: "Iman mohammad ibraheem", password: "919", sheetId: "1b2nTWfPG0zykhoheSlg8ThCSbMwvsdN3wQIoYsmxtYQ" },
-            { name: "kawthar sultan", password: "911", sheetId: "1uTviDScAvTbtBArnMV-8j-roNuaXLNyHSiWq3i60mYs" },
-            { name: "khasiba saeed", password: "903", sheetId: "1iDmXs5sPxoFl8Kwe3CX0ukhAhRkWRhvSH28lndAx75s" },
-            { name: "mariam mohammad jaber", password: "895", sheetId: "1PLARCqBZPek4f3-3dAgY1mFgkyVNR2XJ99hcFGZtFkg" },
-            { name: "mariam naser naeaa", password: "887", sheetId: "1zTI5NVGcyggcYmx9QOKqrVEs2dZaylSbgPFrWmTrrSU" },
-            { name: "moza ali kaderi", password: "879", sheetId: "1y0-fFQy0nXXcYpTpMEU0s7LerYJctI0enA5gELN2zNQ" },
-            { name: "nadia azzam", password: "871", sheetId: "1smS-1PBM4kNT1bAsecjWHSsQmfCUaQ_CqCIjhMOD0WA" },
-            { name: "naema mohammed", password: "863", sheetId: "1jCqpnt_y5AzBm37FQinQFqOpKaHm_hr2cWGTNu2dB94" },
-            { name: "Nahid Ahmad", password: "855", sheetId: "1J5tJqvJSu1xPD1BKbhkb--kuOluPns13QQkLvCnPGTc" },
-            { name: "Nair Anouga", password: "847", sheetId: "1rEtCYNzAWom3U4sIsIFF50YNHsQdM5Y--8zlj7-Pi7w" },
-            { name: "najwa jamal", password: "839", sheetId: "1TRu7uLSULOX_5ppMqzwCQCs8gHw-eEUJAX2VHeHYFZU" },
-            { name: "noura jasem", password: "831", sheetId: "1FxvfcpYUt9lQ6W2LcS7v_KXciRzpepuEGG9kLEqvG-k" },
-            { name: "Rasha Mohammad mansor", password: "823", sheetId: "1yBV7qQAagL15tCsg2lgZtkYkXnE9K70Y_1UUJOTapWw" },
-            { name: "reham ali hussain", password: "815", sheetId: "1PPzylrVIfVc3VI8UbZZo8yjFT88eJLPQ86JT_88-_V0" },
-            { name: "sabiha saif", password: "807", sheetId: "1ASav86PXjYXe1sU4bqglo3m_vZwqy7caF6C3T-1mMpU" },
-            { name: "salameh saeed", password: "799", sheetId: "1Wa9d7igE4ak8n6KxWK3sbvaouTKZLcTkiewcTIejPIQ" },
-            { name: "suad ahmad hussain", password: "791", sheetId: "1MAC6kWVKqXbZTfZ2k_EyeeYokXZpNNxl8lEUGqk-46M" },
-            { name: "suhaila sultan", password: "783", sheetId: "1U4npVz6sh9IOk4eufzEFHury5Df-v0zThoB2pYR3xkA" },
-            { name: "Tingo Babu", password: "775", sheetId: "1Ju5rAtmh2Fhl2U4oadliJXeBpxTIXsehSvq6SAApa4I" }
-        ];
-
-        const subjects = ["اللغة العربية", "التربية الإسلامية", "الغة الإنجليزية", "الدراسات الاجتماعية", "الرياضيات", "العلوم", "الفيزياء", "الكيمياء", "الاحياء", "التربية البدنية والصحية", "الحوسبة والتصميم", "الفنون (فنية وموسيقى)", "ادارة اعمال"];
-        const classNames = ["الصف الأول", "الصف الثاني", "الصف الثالث", "الصف الرابع", "الصف الخامس", "الصف السادس", "الصف السابع", "الصف الثامن", "الصف التاسع", "الصف العاشر", "الصف الحادي عشر", "الصف الثاني عشر"];
-
-        const views = ['home-screen', 'teacher-login', 'teacher-view', 'student-login', 'student-view'];
-        const teacherForm = document.getElementById('quiz-form');
-        const teacherFeedback = document.getElementById('teacher-feedback');
-        const studentFeedback = document.getElementById('student-feedback');
-        const loader = document.getElementById('loader');
-        const passwordModal = document.getElementById('password-modal');
-        const passwordInput = document.getElementById('password-input');
-        const passwordError = document.getElementById('password-error');
-        
-        let questionsData = [];
-        let currentTeacher = null;
-        let currentSheetId = '';
-
-        function populateDropdowns() {
-            const teacherSelect = document.getElementById('teacher-select');
-            teachersData.forEach((teacher, index) => {
-                teacherSelect.innerHTML += `<option value="${index}">${teacher.name}</option>`;
-            });
-            const subjectSelect = document.getElementById('subject-select');
-            subjectSelect.innerHTML = '<option value="">-- اختر المادة --</option>';
-            subjects.forEach(s => { subjectSelect.innerHTML += `<option value="${s}">${s}</option>`; });
-
-            const classSelect = document.getElementById('class-select');
-            classSelect.innerHTML = '<option value="">-- اختر الصف --</option>';
-            classNames.forEach(c => { classSelect.innerHTML += `<option value="${c}">${c}</option>`; });
-        }
-        window.onload = populateDropdowns;
-
-        function generateTeacherForm() {
-            let subjectOptions = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
-            let classOptions = classNames.map(c => `<option value="${c}">${c}</option>`).join('');
-            let formHtml = `
-                <div class="grid md:grid-cols-3 gap-4 mb-8 border-b pb-6">
-                    <select id="subject" class="w-full p-3 border border-gray-300 rounded-md" required><option value="">-- اختر المادة --</option>${subjectOptions}</select>
-                    <select id="className" class="w-full p-3 border border-gray-300 rounded-md" required><option value="">-- اختر الصف --</option>${classOptions}</select>
-                    <input type="text" id="examPassword" placeholder="كلمة سر للاختبار" class="w-full p-3 border border-gray-300 rounded-md" required>
-                </div>
-            `;
-            for (let i = 1; i <= 3; i++) {
-                formHtml += `<div class="question-block ${i < 3 ? 'border-b pb-6' : ''}"><h3 class="text-xl font-semibold mb-4">السؤال ${i}</h3><div class="space-y-4"><input type="text" id="q${i}" placeholder="اكتب نص السؤال ${i} هنا" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt1" placeholder="الخيار الأول" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt2" placeholder="الخيار الثاني" class="w-full p-2 border border-gray-300 rounded-md" required><input type="text" id="q${i}_opt3" placeholder="الخيار الثالث" class="w-full p-2 border border-gray-300 rounded-md" required><div class="flex items-center gap-4"><select id="q${i}_correct" class="p-2 border border-gray-300 rounded-md"><option value="1">الخيار الأول هو الصحيح</option><option value="2">الخيار الثاني هو الصحيح</option><option value="3">الخيار الثالث هو الصحيح</option></select><input type="number" id="q${i}_score" placeholder="علامة السؤال" class="w-32 p-2 border border-gray-300 rounded-md" required></div></div></div>`;
-            }
-            formHtml += `<div class="text-center pt-4"><button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">حفظ الاختبار</button></div>`;
-            teacherForm.innerHTML = formHtml;
-        }
-
-        function showView(viewId) { views.forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById(viewId).classList.remove('hidden'); if (viewId === 'home-screen') { resetAllViews(); } }
-        function showLoader(show) { loader.classList.toggle('hidden', !show); }
-        function openPasswordModal() { passwordInput.value = ''; passwordError.classList.add('hidden'); passwordModal.classList.remove('hidden'); passwordInput.focus(); }
-        function closePasswordModal() { passwordModal.classList.add('hidden'); }
-        
-        function promptTeacherPassword() {
-            const selectedIndex = document.getElementById('teacher-select').value;
-            if (selectedIndex === "") { alert('الرجاء اختيار اسم المعلمة.'); return; }
-            currentTeacher = teachersData[selectedIndex];
-            document.getElementById('password-modal-title').textContent = `كلمة مرور أ. ${currentTeacher.name.split(' ')[0]}`;
-            openPasswordModal();
-        }
-
-        function checkPassword() {
-            if (passwordInput.value === currentTeacher.password) {
-                closePasswordModal();
-                document.getElementById('teacher-view-title').textContent = `لوحة تحكم: ${currentTeacher.name}`;
-                generateTeacherForm();
-                showView('teacher-view');
-            } else {
-                passwordError.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        }
-        passwordInput.addEventListener('keyup', e => { if (e.key === 'Enter') { e.preventDefault(); checkPassword(); } });
-        
-        teacherForm.addEventListener('submit', e => {
-            e.preventDefault(); showLoader(true); teacherFeedback.textContent = '';
-            const metadata = {
-                subject: document.getElementById('subject').value,
-                className: document.getElementById('className').value,
-                examPassword: document.getElementById('examPassword').value
-            };
-            if (!metadata.subject || !metadata.className || !metadata.examPassword) {
-                alert("الرجاء ملء بيانات الاختبار (المادة، الصف، كلمة السر).");
-                showLoader(false);
-                return;
-            }
-            const questions = [];
-            for (let i = 1; i <= 3; i++) { questions.push({ q: document.getElementById(`q${i}`).value, opt1: document.getElementById(`q${i}_opt1`).value, opt2: document.getElementById(`q${i}_opt2`).value, opt3: document.getElementById(`q${i}_opt3`).value, correct: document.getElementById(`q${i}_correct`).value, score: document.getElementById(`q${i}_score`).value }); }
+        <div id="order-form-view" class="bg-white p-6 rounded-lg shadow-md">
+            <h2 id="form-title" class="text-2xl font-bold text-green-600 mb-6">إدخال طلب جديد</h2>
             
-            const url = `${WEB_APP_URL}?action=saveQuestions&sheetId=${currentTeacher.sheetId}&metadata=${encodeURIComponent(JSON.stringify(metadata))}&questions=${encodeURIComponent(JSON.stringify(questions))}`;
-            fetch(url).then(res => res.json()).then(result => {
-                showLoader(false);
-                if (result.status === 'success') {
-                    teacherFeedback.textContent = 'تم حفظ الاختبار بنجاح!';
-                    teacherFeedback.className = 'text-green-600 font-bold';
-                    teacherForm.reset();
-                } else { throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.'); }
-            }).catch(error => { showLoader(false); teacherFeedback.textContent = `فشل الحفظ: ${error.message}`; teacherFeedback.className = 'text-red-600 font-bold'; });
+            <form id="order-form" class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <input type="text" id="clientName" placeholder="* اسم العميل" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <input type="text" id="region" placeholder="* المنطقة" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                
+                <input type="text" id="phoneNumber" placeholder="* رقم الهاتف" class="w-full p-3 border border-gray-300 rounded-md text-left" dir="ltr" required>
+
+                <h3 class="font-semibold pt-4 border-t mt-4 text-gray-700">تفاصيل الأوردر</h3>
+                <div id="orderDetailsContainer" class="space-y-3">
+                    </div>
+
+                <div class="grid md:grid-cols-2 gap-4 pt-4 border-t mt-4">
+                    <div class="flex flex-col">
+                        <label for="deductionDate" class="text-sm text-gray-600 mb-1">* تاريخ قطع الرصيد</label>
+                        <input type="date" id="deductionDate" class="w-full p-3 border border-gray-300 rounded-md text-left" dir="ltr" required>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="deliveryDate" class="text-sm text-gray-600 mb-1">* التاريخ المتوقع للتسليم</label>
+                        <input type="date" id="deliveryDate" class="w-full p-3 border border-gray-300 rounded-md text-left" dir="ltr" required>
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="notes" class="text-sm text-gray-600 mb-1">ملاحظات</label>
+                    <textarea id="notes" rows="3" placeholder="ملاحظات إضافية حول الطلب أو العميل" class="w-full p-3 border border-gray-300 rounded-md"></textarea>
+                </div>
+
+                <div class="text-center pt-6 space-x-4">
+                    <button type="submit" id="submit-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">حفظ طلب جديد ✅</button>
+                    <button type="button" onclick="saveOrder(true)" id="update-button" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 hidden">تعديل البيانات 🔄</button>
+                    <button type="button" onclick="resetForm()" id="cancel-update-button" class="bg-gray-400 hover:bg-gray-500 text-black font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 ml-4 hidden">إلغاء ❌</button>
+                </div>
+            </form>
+            <p id="form-feedback" class="text-center mt-4 font-bold"></p>
+        </div>
+
+        <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري المعالجة...</p></div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
+        
+        const loader = document.getElementById('loader');
+        const formFeedback = document.getElementById('form-feedback');
+        const searchFeedback = document.getElementById('search-feedback');
+        const orderForm = document.getElementById('order-form');
+        const orderDetailsContainer = document.getElementById('orderDetailsContainer');
+        const submitButton = document.getElementById('submit-button');
+        const updateButton = document.getElementById('update-button');
+        const cancelButton = document.getElementById('cancel-update-button');
+        const formTitle = document.getElementById('form-title');
+
+        function showLoader(show) { loader.classList.toggle('hidden', !show); }
+
+        function addOrderDetailField(detail = '') {
+            const container = orderDetailsContainer;
+            const isFirst = container.children.length === 0;
+
+            const newFieldDiv = document.createElement('div');
+            newFieldDiv.className = 'input-group';
+            
+            let fieldHtml = `
+                <input type="text" name="orderDetail" placeholder="تفاصيل الأوردر ${isFirst && !detail ? '' : '(قيمة إضافية)'}" class="flex-grow p-3 border border-gray-300 rounded-md" value="${detail}" required>
+            `;
+
+            if (isFirst && !detail) {
+                // الزر الأول يكون "إضافة المزيد"
+                fieldHtml += `<button type="button" onclick="addOrderDetailField()" class="bg-blue-500 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap">إضافة المزيد</button>`;
+            } else {
+                // باقي الأزرار تكون "حذف"
+                fieldHtml += `<button type="button" onclick="this.parentNode.remove(); adjustAddMoreButton()" class="bg-red-500 hover:bg-red-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap">حذف</button>`;
+            }
+            
+            newFieldDiv.innerHTML = fieldHtml;
+            container.appendChild(newFieldDiv);
+
+            // نعدل زر الإضافة/الحذف في الحقل الأول فقط في حالة إضافة حقل جديد يدوياً
+            if (isFirst && !detail) {
+                const firstButton = newFieldDiv.querySelector('button');
+                if (firstButton) {
+                    firstButton.textContent = 'حذف';
+                    firstButton.className = 'bg-red-500 hover:bg-red-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap';
+                    firstButton.onclick = () => { newFieldDiv.remove(); adjustAddMoreButton(); };
+                }
+            }
+        }
+        
+        // دالة لضمان وجود زر "إضافة المزيد" عند وجود حقل واحد فقط
+        function adjustAddMoreButton() {
+            const container = orderDetailsContainer;
+            if (container.children.length === 0) {
+                 addOrderDetailField(); // نرجع الحقل الأساسي مع زر الإضافة
+            }
+             // التأكد من أن الحقل الأول يحتوي على زر "إضافة المزيد" إذا كان هو الوحيد
+             if (container.children.length === 1) {
+                 const firstField = container.querySelector('.input-group');
+                 const currentButton = firstField.querySelector('button');
+                 if (currentButton) {
+                    currentButton.textContent = 'إضافة المزيد';
+                    currentButton.className = 'bg-blue-500 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap';
+                    currentButton.onclick = () => addOrderDetailField();
+                 }
+             }
+        }
+
+        // تهيئة حقل تفاصيل الأوردر عند تحميل الصفحة
+        window.onload = () => {
+             addOrderDetailField();
+        };
+
+        orderForm.addEventListener('submit', e => {
+            e.preventDefault();
+            if (!updateButton.classList.contains('hidden')) {
+                // إذا كان زر التعديل مرئياً، نقوم بعملية التعديل (isUpdate = true)
+                saveOrder(true);
+            } else {
+                // إذا لم يكن مرئياً، نقوم بعملية الحفظ (isUpdate = false)
+                saveOrder(false);
+            }
         });
 
-        function findQuiz() {
-            const subject = document.getElementById('subject-select').value;
-            const className = document.getElementById('class-select').value;
-            const password = document.getElementById('exam-password-input').value;
-            const errorP = document.getElementById('student-login-error');
-            errorP.textContent = '';
-            if (!subject || !className || !password) {
-                alert('الرجاء ملء جميع الحقول.');
+        function collectOrderDetails() {
+            const details = [];
+            document.querySelectorAll('input[name="orderDetail"]').forEach(input => {
+                if (input.value.trim()) {
+                    details.push(input.value.trim());
+                }
+            });
+            // نرجع تفاصيل الأوردر مفصولة بفاصل (||) لتسهيل القراءة في شيت جوجل
+            return details.join(' || '); 
+        }
+        
+        // دالة حفظ وتعديل الطلب
+        function saveOrder(isUpdate = false) {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            if (!phoneNumber) { 
+                alert('الرجاء إدخال رقم الهاتف.'); 
+                return; 
+            }
+
+            formFeedback.textContent = '';
+            showLoader(true);
+
+            const orderDetails = collectOrderDetails();
+
+            // تجهيز البيانات لإرسالها عبر URL
+            const params = {
+                action: 'saveOrder',
+                isUpdate: isUpdate,
+                clientName: document.getElementById('clientName').value,
+                region: document.getElementById('region').value,
+                phone: phoneNumber,
+                orderDetails: orderDetails,
+                deductionDate: document.getElementById('deductionDate').value,
+                deliveryDate: document.getElementById('deliveryDate').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            // بناء رابط الاستدعاء
+            const queryString = Object.keys(params).map(key => {
+                return key + '=' + encodeURIComponent(params[key]);
+            }).join('&');
+
+            const url = `${WEB_APP_URL}?${queryString}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(result => {
+                    showLoader(false);
+                    if (result.status === 'success') {
+                        formFeedback.textContent = result.message;
+                        formFeedback.className = 'text-green-600 font-bold mt-4';
+                        resetForm(); // إعادة تعيين النموذج بعد الحفظ
+                    } else {
+                        throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
+                    }
+                })
+                .catch(error => {
+                    showLoader(false);
+                    formFeedback.textContent = `فشل العملية: ${error.message}`;
+                    formFeedback.className = 'text-red-600 font-bold mt-4';
+                });
+        }
+        
+        // دالة البحث عن الطلب
+        function searchOrder() {
+            const searchInput = document.getElementById('search-input').value.trim();
+            searchFeedback.textContent = '';
+            if (!searchInput) {
+                searchFeedback.textContent = 'الرجاء إدخال رقم الهاتف أو اسم العميل للبحث.';
+                searchFeedback.className = 'text-red-600 font-semibold mt-3';
                 return;
             }
-            showLoader(true);
-            const url = `${WEB_APP_URL}?action=findQuiz&subject=${encodeURIComponent(subject)}&className=${encodeURIComponent(className)}&password=${encodeURIComponent(password)}`;
+
+            // تحديد ما إذا كان بحثاً بالهاتف أو بالاسم
+            const isPhoneSearch = !isNaN(searchInput) && searchInput.length > 5; 
             
-            fetch(url).then(res => res.json()).then(result => {
-                showLoader(false);
-                if (result.status === 'success') {
-                    currentSheetId = result.sheetId;
-                    document.getElementById('student-view-title').textContent = `اختبار: ${subject} - ${className}`;
-                    showView('student-view');
-                } else {
-                    errorP.textContent = result.message;
-                }
-            }).catch(error => {
-                showLoader(false);
-                errorP.textContent = `حدث خطأ: ${error.message}`;
-            });
+            showLoader(true);
+
+            const queryParam = isPhoneSearch ? `phone=${encodeURIComponent(searchInput)}` : `name=${encodeURIComponent(searchInput)}`;
+            const url = `${WEB_APP_URL}?action=findOrder&${queryParam}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(result => {
+                    showLoader(false);
+                    if (result.status === 'success') {
+                        searchFeedback.textContent = `تم العثور على الطلب للعميل: ${result.order['اسم العميل']}. يمكنك الآن تعديل البيانات.`;
+                        searchFeedback.className = 'text-green-600 font-semibold mt-3';
+                        populateFormForUpdate(result.order);
+                    } else {
+                        searchFeedback.textContent = result.message;
+                        searchFeedback.className = 'text-red-600 font-semibold mt-3';
+                        resetForm();
+                    }
+                })
+                .catch(error => {
+                    showLoader(false);
+                    searchFeedback.textContent = `حدث خطأ أثناء البحث: ${error.message}`;
+                    searchFeedback.className = 'text-red-600 font-semibold mt-3';
+                });
         }
 
-        function startQuiz() {
-            const studentName = document.getElementById('student-name').value;
-            const errorP = document.getElementById('student-name-error');
-            errorP.textContent = '';
-            if (!studentName.trim()) { alert('الرجاء إدخال اسمك.'); return; }
-            showLoader(true);
+        // ملء النموذج ببيانات الطلب الموجود
+        function populateFormForUpdate(order) {
+            formTitle.textContent = 'تعديل بيانات الطلب الحالي';
             
-            const url = `${WEB_APP_URL}?action=getQuestions&sheetId=${currentSheetId}&name=${encodeURIComponent(studentName)}`;
+            // تعبئة الحقول الأساسية
+            document.getElementById('clientName').value = order['اسم العميل'] || '';
+            document.getElementById('region').value = order['المنطقة'] || '';
+            document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
+            document.getElementById('deductionDate').value = formatDate(order['تاريخ قطع الرصيد']) || '';
+            document.getElementById('deliveryDate').value = formatDate(order['التاريخ المتوقع للتسليم']) || '';
+            document.getElementById('notes').value = order['ملاحظات'] || '';
+
+            // تعبئة تفاصيل الأوردر المتعددة
+            orderDetailsContainer.innerHTML = '';
+            // يفترض أن تفاصيل الأوردر في الشيت مفصولة بـ ' || '
+            const detailsArray = (order['تفاصيل الاوردر'] || '').split(' || ').filter(d => d.trim() !== '');
             
-            fetch(url).then(res => res.json()).then(data => {
-                showLoader(false);
-                if (data.status === 'success') {
-                    document.getElementById('student-name-input').classList.add('hidden');
-                    questionsData = data.questions; 
-                    displayQuiz(data.questions); 
-                } else {
-                    errorP.textContent = data.message;
-                }
-            }).catch(error => { 
-                showLoader(false); 
-                studentFeedback.textContent = `فشل تحميل الاختبار: ${error.message}`; 
-                studentFeedback.className = 'text-red-600 font-bold';
-            });
+            if (detailsArray.length > 0) {
+                detailsArray.forEach(detail => addOrderDetailField(detail.trim()));
+            } else {
+                 addOrderDetailField(''); // إضافة حقل فارغ إذا لم يكن هناك تفاصيل
+            }
+            adjustAddMoreButton();
+
+            // إظهار زر التعديل وإخفاء زر الحفظ
+            submitButton.classList.add('hidden');
+            updateButton.classList.remove('hidden');
+            cancelButton.classList.remove('hidden');
+            
+            // مسح رسائل النموذج السابقة
+            formFeedback.textContent = '';
         }
 
-        function displayQuiz(questions) {
-            const quizContainer = document.getElementById('quiz-container'); quizContainer.innerHTML = '';
-            questions.forEach((q, index) => { const questionDiv = document.createElement('div'); questionDiv.className = 'question-block border-b pb-4'; questionDiv.innerHTML = `<p class="font-semibold text-lg mb-3">${index + 1}. ${q.question}</p><div class="space-y-2"><div><input type="radio" id="q${index}_opt1" name="q${index}" value="1"><label for="q${index}_opt1" class="mr-2">${q.options[0]}</label></div><div><input type="radio" id="q${index}_opt2" name="q${index}" value="2"><label for="q${index}_opt2" class="mr-2">${q.options[1]}</label></div><div><input type="radio" id="q${index}_opt3" name="q${index}" value="3"><label for="q${index}_opt3" class="mr-2">${q.options[2]}</label></div></div>`; quizContainer.appendChild(questionDiv); });
-            const submitButton = document.createElement('button'); submitButton.textContent = 'إرسال الإجابات'; submitButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg mt-4'; submitButton.onclick = submitAnswers; quizContainer.appendChild(submitButton); quizContainer.classList.remove('hidden');
+        // دالة لإعادة تعيين النموذج إلى وضع "طلب جديد"
+        function resetForm() {
+            orderForm.reset();
+            formTitle.textContent = 'إدخال طلب جديد';
+            formFeedback.textContent = '';
+            document.getElementById('search-input').value = '';
+            searchFeedback.textContent = '';
+            
+            // إعادة ضبط حقول تفاصيل الأوردر
+            orderDetailsContainer.innerHTML = '';
+            addOrderDetailField(); 
+            adjustAddMoreButton();
+            
+            // إخفاء زر التعديل وإظهار زر الحفظ
+            submitButton.classList.remove('hidden');
+            updateButton.classList.add('hidden');
+            cancelButton.classList.add('hidden');
+            
+            // مسح أي رسائل سابقة
+            formFeedback.className = '';
+            searchFeedback.className = '';
         }
-        function submitAnswers() {
-            let totalScore = 0, maxScore = 0; const selectedAnswers = [];
-            questionsData.forEach((q, index) => { const selectedOption = document.querySelector(`input[name="q${index}"]:checked`); maxScore += parseInt(q.score, 10) || 0; if (selectedOption) { selectedAnswers.push(selectedOption.value); if (selectedOption.value == q.correct) { totalScore += (parseInt(q.score, 10) || 0); } } else { selectedAnswers.push("لم تتم الإجابة"); } });
-            document.getElementById('quiz-container').classList.add('hidden'); document.getElementById('score-display').textContent = `${totalScore} / ${maxScore}`; document.getElementById('student-result').classList.remove('hidden');
-            saveStudentResult(totalScore, selectedAnswers);
-        }
-        function saveStudentResult(score, answers) {
-            const studentName = document.getElementById('student-name').value;
-            const url = `${WEB_APP_URL}?action=saveAnswer&sheetId=${currentSheetId}&name=${encodeURIComponent(studentName)}&score=${score}&answers=${encodeURIComponent(JSON.stringify(answers))}`;
-            fetch(url).then(res => res.json()).then(data => { if (data.status !== 'success') { console.error('فشل حفظ النتيجة:', data.message); } }).catch(error => console.error('خطأ في الشبكة عند حفظ النتيجة:', error));
-        }
-        function resetAllViews() {
-            document.getElementById('student-name').value = '';
-            document.getElementById('student-name-input').classList.remove('hidden');
-            document.getElementById('quiz-container').innerHTML = '';
-            document.getElementById('quiz-container').classList.add('hidden');
-            document.getElementById('student-result').classList.add('hidden');
-            studentFeedback.textContent = '';
-            document.getElementById('student-name-error').textContent = '';
-            document.getElementById('subject-select').value = "";
-            document.getElementById('class-select').value = "";
-            document.getElementById('exam-password-input').value = "";
-            document.getElementById('student-login-error').textContent = "";
-            document.getElementById('teacher-select').value = "";
-            teacherForm.innerHTML = '';
-            teacherFeedback.textContent = '';
-            questionsData = [];
-            currentTeacher = null;
-            currentSheetId = '';
+
+        // دالة مساعدة لتنسيق التاريخ (لأن Google Sheets يرجع التواريخ ككائنات أو سلاسل)
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            try {
+                // محاولة تحويل القيمة إلى تاريخ
+                const date = new Date(dateValue);
+                if (isNaN(date)) return '';
+                // تنسيق YYYY-MM-DD الذي يقبله حقل type="date"
+                return date.toISOString().split('T')[0]; 
+            } catch (e) {
+                return '';
+            }
         }
     </script>
 </body>
