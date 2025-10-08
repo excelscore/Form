@@ -85,8 +85,8 @@
     </div>
 
     <script>
-        // رابط تطبيق الويب الخاص بك
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
+        // 🚨🚨 تم تحديث رابط تطبيق الويب هنا
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-sNNjlyiNfDYAQwRuR-f-moGT2GAyO-kDl-gC09YIjvO4vc1DXXLNLmG3tzeWx_Dg/exec';
         
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
@@ -162,7 +162,7 @@
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success' && result.orderId) {
-                        // 🚨🚨 وضع الرقم التلقائي في حقل النموذج
+                        // 🚨 وضع الرقم التلقائي في حقل النموذج
                         orderIdInput.value = result.orderId;
                         orderIdInput.placeholder = '';
                     } else {
@@ -199,7 +199,6 @@
                     } else {
                         formFeedback.textContent = `لم يتم العثور على طلب سابق لهذا العميل. يمكنك إدخال طلب جديد.`;
                         formFeedback.className = 'text-orange-600 font-bold mt-4';
-                        // في حالة عدم العثور، نطلب رقم طلب جديد ونضع اسم العميل في الحقل
                         resetForm(true); 
                         clientNameSelect.val(clientName).trigger('change.select2');
                     }
@@ -211,8 +210,6 @@
                 });
         }
         
-        // --------------------- دوال مساعدة ---------------------
-
         function addOrderDetailField(detail = '') {
             const container = orderDetailsContainer;
             const newFieldDiv = document.createElement('div');
@@ -254,8 +251,6 @@
             }
         }
         
-        // --------------------- وظيفة الحفظ والتعديل ---------------------
-
         function collectOrderDetails() {
             const details = [];
             document.querySelectorAll('input[name="orderDetail"]').forEach(input => {
@@ -289,7 +284,7 @@
             const params = {
                 action: 'saveOrder',
                 isUpdate: isUpdate,
-                orderId: orderId, // 🚨🚨 إرسال الرقم التلقائي إلى السكربت ليتم حفظه في العمود A
+                orderId: orderId, 
                 clientName: clientName, 
                 phone: phoneNumber,
                 orderDetails: orderDetails,
@@ -330,8 +325,6 @@
                 });
         }
         
-        // --------------------- وظائف تهيئة النموذج ---------------------
-
         function populateFormForUpdate(order) {
             const orderID = order['رقم الطلب (ID):'] || '';
             formTitle.textContent = `تعديل بيانات الطلب الحالي (رقم: ${orderID})`;
@@ -381,11 +374,10 @@
             }
         }
         
-        // 🚨 تهيئة عند تحميل الصفحة
         $(document).ready(function() {
             initializeClientNameSelect();
             fetchClientNames(); 
-            fetchNewOrderId(); // <=== تضمن هذه الدالة الترقيم التلقائي
+            fetchNewOrderId(); 
             addOrderDetailField();
         });
     </script>
