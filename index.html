@@ -103,9 +103,10 @@
     </div>
 
     <script>
-        // 🚨🚨 الرابط المحدث الذي أرسلته لي
+        // رابط تطبيق الويب الخاص بك
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
         
+        // المتغيرات العالمية للوصول إلى عناصر النموذج
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
         const orderForm = document.getElementById('order-form');
@@ -117,7 +118,7 @@
         
         const orderIdInput = document.getElementById('orderId'); 
         const clientNameSelect = $('#clientName'); 
-        let clientNamesCache = []; // لتسريع عملية جلب قائمة العملاء
+        let clientNamesCache = []; 
 
         function showLoader(show) { loader.classList.toggle('hidden', !show); }
 
@@ -132,36 +133,27 @@
                     searchOrderByClientName(selectedName);
                 }
             }).on('change', function(e) {
-                // إذا كان التغيير بسبب اختيار اسم موجود، فلا نفعل شيئًا هنا (تُعالج في select2:select)
-                // إذا كان التغيير بسبب كتابة اسم جديد يدويًا، نتأكد من وضع الحفظ الجديد
                 const currentVal = clientNameSelect.val();
-                
-                // يتم التحقق مما إذا كانت القيمة المكتوبة حديثًا غير موجودة بالفعل في القائمة الأصلية
                 const isNewEntry = currentVal && !clientNamesCache.includes(currentVal.trim());
 
-                // إذا كنا في وضع التعديل وقام المستخدم بإدخال اسم جديد
                 if (isNewEntry && updateButton.classList.contains('hidden') === false) {
-                     // نعود لوضع الحفظ الجديد، ونحافظ على اسم العميل الجديد في الحقل
                      resetForm(true); 
                      clientNameSelect.val(currentVal).trigger('change.select2'); 
                 }
             });
         }
 
-        // دالة لتعبئة القائمة المنسدلة من الكاش أو من الخادم
         function populateClientSelect(names) {
              const currentVal = clientNameSelect.val(); 
              clientNameSelect.empty().append(new Option("اختيار أو إدخال اسم العميل", ""));
              names.forEach(name => {
                  clientNameSelect.append(new Option(name, name));
              });
-             // إعادة تعيين القيمة بعد التحديث
              if(currentVal) {
                  clientNameSelect.val(currentVal).trigger('change.select2'); 
              }
         }
 
-        // جلب قائمة أسماء العملاء من السكربت (مع تفعيل الكاش)
         function fetchClientNames(forceReload = false) {
             if (clientNamesCache.length > 0 && !forceReload) {
                  populateClientSelect(clientNamesCache);
@@ -173,7 +165,7 @@
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success' && result.names) {
-                        clientNamesCache = result.names; // تحديث الكاش
+                        clientNamesCache = result.names; 
                         populateClientSelect(clientNamesCache);
                     }
                 })
@@ -203,9 +195,7 @@
         }
 
         function searchOrderByClientName(clientName) {
-            // هذا يحدث فقط عند اختيار عميل موجود من القائمة
             if (updateButton.classList.contains('hidden') === false) {
-                 // إذا كنا في وضع التعديل بالفعل، فلا نعيد البحث إلا إذا كان العميل مختلفًا
                  return;
             }
             
@@ -220,11 +210,12 @@
                 .then(result => {
                     showLoader(false);
                     if (result.status === 'success') {
-                        formFeedback.textContent = `تم العثور على آخر طلب برقم ${result.order['رقم الطلب'] || 'غير محدد'}. يمكنك الآن تعديل البيانات.`;
+                        // 🚨🚨 تم تحديث اسم الحقل المستخدم للرقم التسلسلي هنا
+                        const orderID = result.order['رقم الطلب (ID):'] || 'غير محدد';
+                        formFeedback.textContent = `تم العثور على آخر طلب برقم ${orderID}. يمكنك الآن تعديل البيانات.`;
                         formFeedback.className = 'text-blue-600 font-bold mt-4';
                         populateFormForUpdate(result.order);
                     } else {
-                        // طلب جديد لهذا العميل (نحافظ على اسم العميل ونحصل على ID جديد)
                         formFeedback.textContent = `لم يتم العثور على طلب سابق لهذا العميل. يمكنك إدخال طلب جديد.`;
                         formFeedback.className = 'text-orange-600 font-bold mt-4';
                         resetForm(false); 
@@ -295,7 +286,6 @@
         
         orderForm.addEventListener('submit', e => {
             e.preventDefault();
-            // تحديد ما إذا كنا في وضع التعديل (إذا كان زر التعديل مرئيًا)
             const isUpdate = !updateButton.classList.contains('hidden');
             saveOrder(isUpdate); 
         });
@@ -341,13 +331,11 @@
                         formFeedback.className = 'text-green-600 font-bold mt-4';
                         
                         if (isUpdate === false) { 
-                            // إذا كان حفظًا جديدًا: إعادة تعيين لجلب ID جديد وتحديث قائمة العملاء
                             resetForm(); 
-                            fetchClientNames(true); // تحديث إجباري لقائمة العملاء بعد إضافة عميل جديد
+                            fetchClientNames(true); 
                         } else {
-                            // تعديل ناجح: نبقى في وضع التعديل
                             formTitle.textContent = `تعديل بيانات الطلب الحالي (تم الحفظ)`;
-                            fetchClientNames(true); // تحديث القائمة في حال تم تغيير اسم العميل
+                            fetchClientNames(true); 
                         }
                     } else {
                         throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
@@ -363,21 +351,21 @@
         // --------------------- وظائف تهيئة النموذج ---------------------
 
         function populateFormForUpdate(order) {
-            formTitle.textContent = `تعديل بيانات الطلب الحالي (رقم: ${order['رقم الطلب'] || 'جديد'})`;
+            // 🚨🚨 استخدام اسم الحقل الصحيح هنا
+            const orderID = order['رقم الطلب (ID):'] || '';
+            formTitle.textContent = `تعديل بيانات الطلب الحالي (رقم: ${orderID})`;
             
-            orderIdInput.value = order['رقم الطلب'] || '';
+            orderIdInput.value = orderID;
 
-            // يجب إعادة تهيئة Select2 بالقيمة لضمان ظهور الاسم بشكل صحيح
             clientNameSelect.val(order['اسم العميل']).trigger('change.select2');
             
             document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
-            // التواريخ تأتي كـ 'YYYY-MM-DD' من السكربت، مما يسهل ملء حقول input[type="date"]
             document.getElementById('deductionDate').value = order['تاريخ قطع الرصيد'] || '';
             document.getElementById('deliveryDate').value = order['التاريخ المتوقع للتسليم'] || '';
             document.getElementById('notes').value = order['ملاحظات'] || '';
 
             orderDetailsContainer.innerHTML = '';
-            const allDetailsString = order['تفاصيل الاوردر'] || '';
+            const allDetailsString = order['تفاصيل الأوردر'] || ''; // تم تصحيح اسم العمود
             const detailsArray = allDetailsString.split(' || ').filter(d => d.trim() !== '');
             
             if (detailsArray.length > 0) {
@@ -408,15 +396,15 @@
             cancelButton.classList.add('hidden');
             
             if (fetchNewID) {
-                fetchNewOrderId(); // جلب رقم طلب جديد
+                fetchNewOrderId(); 
             }
         }
         
         // 🚨 تهيئة عند تحميل الصفحة
         $(document).ready(function() {
             initializeClientNameSelect();
-            fetchClientNames(); // جلب القائمة
-            fetchNewOrderId(); // جلب رقم الطلب التسلسلي
+            fetchClientNames(); 
+            fetchNewOrderId(); 
             addOrderDetailField();
         });
     </script>
