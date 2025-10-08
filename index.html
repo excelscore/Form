@@ -13,37 +13,19 @@
     <style>
         body { font-family: 'Cairo', sans-serif; } 
         .hidden { display: none; }
-        /* تحسين مظهر "جاري المعالجة" ليكون أكثر وضوحًا */
         .loader-container { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background-color: rgba(0, 0, 0, 0.6); /* خلفية داكنة */
-            color: white; /* نص أبيض */
+            background-color: rgba(0, 0, 0, 0.6); 
+            color: white; 
             z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; 
         }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .input-group { display: flex; align-items: flex-start; gap: 8px; }
-        /* تصحيح تنسيق Select2 ليدعم RTL */
-        .select2-container--default .select2-selection--single {
-            height: 48px !important;
-            padding: 8px 12px;
-            border-radius: 0.375rem;
-            border-color: #d1d5db;
-            text-align: right;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            left: 1px !important;
-            right: auto;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 28px;
-            padding-right: 0;
-            padding-left: 10px; 
-            text-align: right;
-        }
-        .select2-dropdown {
-            text-align: right;
-        }
+        .select2-container--default .select2-selection--single { height: 48px !important; padding: 8px 12px; border-radius: 0.375rem; border-color: #d1d5db; text-align: right; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { left: 1px !important; right: auto; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 28px; padding-right: 0; padding-left: 10px; text-align: right; }
+        .select2-dropdown { text-align: right; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -106,7 +88,6 @@
         // رابط تطبيق الويب الخاص بك
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
         
-        // المتغيرات العالمية للوصول إلى عناصر النموذج
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
         const orderForm = document.getElementById('order-form');
@@ -181,6 +162,7 @@
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success' && result.orderId) {
+                        // 🚨🚨 وضع الرقم التلقائي في حقل النموذج
                         orderIdInput.value = result.orderId;
                         orderIdInput.placeholder = '';
                     } else {
@@ -210,7 +192,6 @@
                 .then(result => {
                     showLoader(false);
                     if (result.status === 'success') {
-                        // 🚨🚨 تم تحديث اسم الحقل المستخدم للرقم التسلسلي هنا
                         const orderID = result.order['رقم الطلب (ID):'] || 'غير محدد';
                         formFeedback.textContent = `تم العثور على آخر طلب برقم ${orderID}. يمكنك الآن تعديل البيانات.`;
                         formFeedback.className = 'text-blue-600 font-bold mt-4';
@@ -218,7 +199,8 @@
                     } else {
                         formFeedback.textContent = `لم يتم العثور على طلب سابق لهذا العميل. يمكنك إدخال طلب جديد.`;
                         formFeedback.className = 'text-orange-600 font-bold mt-4';
-                        resetForm(false); 
+                        // في حالة عدم العثور، نطلب رقم طلب جديد ونضع اسم العميل في الحقل
+                        resetForm(true); 
                         clientNameSelect.val(clientName).trigger('change.select2');
                     }
                 })
@@ -307,7 +289,7 @@
             const params = {
                 action: 'saveOrder',
                 isUpdate: isUpdate,
-                orderId: orderId, 
+                orderId: orderId, // 🚨🚨 إرسال الرقم التلقائي إلى السكربت ليتم حفظه في العمود A
                 clientName: clientName, 
                 phone: phoneNumber,
                 orderDetails: orderDetails,
@@ -351,7 +333,6 @@
         // --------------------- وظائف تهيئة النموذج ---------------------
 
         function populateFormForUpdate(order) {
-            // 🚨🚨 استخدام اسم الحقل الصحيح هنا
             const orderID = order['رقم الطلب (ID):'] || '';
             formTitle.textContent = `تعديل بيانات الطلب الحالي (رقم: ${orderID})`;
             
@@ -365,7 +346,7 @@
             document.getElementById('notes').value = order['ملاحظات'] || '';
 
             orderDetailsContainer.innerHTML = '';
-            const allDetailsString = order['تفاصيل الأوردر'] || ''; // تم تصحيح اسم العمود
+            const allDetailsString = order['تفاصيل الأوردر'] || ''; 
             const detailsArray = allDetailsString.split(' || ').filter(d => d.trim() !== '');
             
             if (detailsArray.length > 0) {
@@ -404,7 +385,7 @@
         $(document).ready(function() {
             initializeClientNameSelect();
             fetchClientNames(); 
-            fetchNewOrderId(); 
+            fetchNewOrderId(); // <=== تضمن هذه الدالة الترقيم التلقائي
             addOrderDetailField();
         });
     </script>
