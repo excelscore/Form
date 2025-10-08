@@ -13,7 +13,13 @@
     <style>
         body { font-family: 'Cairo', sans-serif; } 
         .hidden { display: none; }
-        .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        /* تحسين مظهر "جاري المعالجة" ليكون أكثر وضوحًا */
+        .loader-container { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0, 0, 0, 0.6); /* خلفية داكنة */
+            color: white; /* نص أبيض */
+            z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; 
+        }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .input-group { display: flex; align-items: flex-start; gap: 8px; }
@@ -93,11 +99,11 @@
             <p id="form-feedback" class="text-center mt-4 font-bold"></p>
         </div>
 
-        <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-gray-600">جاري المعالجة...</p></div>
+        <div id="loader" class="loader-container hidden"><div class="loader"></div><p class="mt-2 text-white font-bold">جاري المعالجة... يرجى الانتظار.</p></div>
     </div>
 
     <script>
-        // 🚨🚨 الرابط المحدث بناءً على ما أرسلته
+        // 🚨🚨 الرابط المحدث الذي أرسلته لي
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbze1d4d_ohISAJQjsgwwMgeFg0gFt6yGimfE8Ad1OD0cMfbI4Co1Lb6twn6A8u8wUbq/exec';
         
         const loader = document.getElementById('loader');
@@ -111,6 +117,7 @@
         
         const orderIdInput = document.getElementById('orderId'); 
         const clientNameSelect = $('#clientName'); 
+        let clientNamesCache = []; // لتسريع عملية جلب قائمة العملاء
 
         function showLoader(show) { loader.classList.toggle('hidden', !show); }
 
@@ -120,39 +127,54 @@
                 tags: true, 
                 dir: "rtl"
             }).on('select2:select', function (e) {
-                // عند اختيار عميل من القائمة المنسدلة (سواء جديد أو قديم)
                 const selectedName = e.params.data.id;
                 if (selectedName) {
                     searchOrderByClientName(selectedName);
                 }
             }).on('change', function(e) {
-                // عند إدخال اسم جديد يدوياً، لا نقوم بالبحث، بل نبقى في وضع الحفظ الجديد
+                // إذا كان التغيير بسبب اختيار اسم موجود، فلا نفعل شيئًا هنا (تُعالج في select2:select)
+                // إذا كان التغيير بسبب كتابة اسم جديد يدويًا، نتأكد من وضع الحفظ الجديد
                 const currentVal = clientNameSelect.val();
-                const isNewEntry = currentVal && clientNameSelect.find('option[value="' + currentVal + '"]').length === 0;
                 
-                if (isNewEntry && !updateButton.classList.contains('hidden')) {
-                     // إذا تم كتابة اسم جديد ونحن في وضع التعديل، نعود لوضع الحفظ الجديد
+                // يتم التحقق مما إذا كانت القيمة المكتوبة حديثًا غير موجودة بالفعل في القائمة الأصلية
+                const isNewEntry = currentVal && !clientNamesCache.includes(currentVal.trim());
+
+                // إذا كنا في وضع التعديل وقام المستخدم بإدخال اسم جديد
+                if (isNewEntry && updateButton.classList.contains('hidden') === false) {
+                     // نعود لوضع الحفظ الجديد، ونحافظ على اسم العميل الجديد في الحقل
                      resetForm(true); 
-                     clientNameSelect.val(currentVal).trigger('change.select2'); // نضبط القيمة يدوياً
+                     clientNameSelect.val(currentVal).trigger('change.select2'); 
                 }
             });
         }
 
-        function fetchClientNames() {
+        // دالة لتعبئة القائمة المنسدلة من الكاش أو من الخادم
+        function populateClientSelect(names) {
+             const currentVal = clientNameSelect.val(); 
+             clientNameSelect.empty().append(new Option("اختيار أو إدخال اسم العميل", ""));
+             names.forEach(name => {
+                 clientNameSelect.append(new Option(name, name));
+             });
+             // إعادة تعيين القيمة بعد التحديث
+             if(currentVal) {
+                 clientNameSelect.val(currentVal).trigger('change.select2'); 
+             }
+        }
+
+        // جلب قائمة أسماء العملاء من السكربت (مع تفعيل الكاش)
+        function fetchClientNames(forceReload = false) {
+            if (clientNamesCache.length > 0 && !forceReload) {
+                 populateClientSelect(clientNamesCache);
+                 return;
+            }
+
             const url = `${WEB_APP_URL}?action=getClientNames`;
             fetch(url)
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success' && result.names) {
-                        const currentVal = clientNameSelect.val(); 
-                        clientNameSelect.empty().append(new Option("اختيار أو إدخال اسم العميل", ""));
-                        result.names.forEach(name => {
-                            clientNameSelect.append(new Option(name, name));
-                        });
-                        if(currentVal) {
-                             // يجب أن نستخدم trigger('change.select2') لإعادة تعيين القيمة بشكل صحيح مع Select2
-                             clientNameSelect.val(currentVal).trigger('change.select2'); 
-                        }
+                        clientNamesCache = result.names; // تحديث الكاش
+                        populateClientSelect(clientNamesCache);
                     }
                 })
                 .catch(error => {
@@ -177,15 +199,14 @@
                     console.error("Failed to fetch new order ID:", error);
                     orderIdInput.value = 'ERROR';
                     orderIdInput.placeholder = 'فشل جلب الرقم التسلسلي';
-                    formFeedback.textContent = `خطأ: فشل جلب رقم الطلب التلقائي. يرجى مراجعة Google Apps Script.`;
-                    formFeedback.className = 'text-red-600 font-bold mt-4';
                 });
         }
 
         function searchOrderByClientName(clientName) {
-            // إذا كنا في وضع الحفظ الجديد، لا نبحث عن الطلب القديم
-            if (updateButton.classList.contains('hidden')) {
-                return;
+            // هذا يحدث فقط عند اختيار عميل موجود من القائمة
+            if (updateButton.classList.contains('hidden') === false) {
+                 // إذا كنا في وضع التعديل بالفعل، فلا نعيد البحث إلا إذا كان العميل مختلفًا
+                 return;
             }
             
             formFeedback.textContent = 'جاري البحث عن آخر طلب للعميل...';
@@ -203,10 +224,9 @@
                         formFeedback.className = 'text-blue-600 font-bold mt-4';
                         populateFormForUpdate(result.order);
                     } else {
-                        // طلب جديد لهذا العميل
+                        // طلب جديد لهذا العميل (نحافظ على اسم العميل ونحصل على ID جديد)
                         formFeedback.textContent = `لم يتم العثور على طلب سابق لهذا العميل. يمكنك إدخال طلب جديد.`;
                         formFeedback.className = 'text-orange-600 font-bold mt-4';
-                        // نبقى في وضع الحفظ الجديد ونمسح كل شيء ما عدا اسم العميل
                         resetForm(false); 
                         clientNameSelect.val(clientName).trigger('change.select2');
                     }
@@ -225,7 +245,6 @@
             const newFieldDiv = document.createElement('div');
             newFieldDiv.className = 'input-group';
             
-            // التأكد من أن حقل الإضافة يظهر فقط في آخر حقل
             const existingAddButton = container.querySelector('.input-group button.bg-blue-500');
             if (existingAddButton) {
                 existingAddButton.remove();
@@ -276,6 +295,7 @@
         
         orderForm.addEventListener('submit', e => {
             e.preventDefault();
+            // تحديد ما إذا كنا في وضع التعديل (إذا كان زر التعديل مرئيًا)
             const isUpdate = !updateButton.classList.contains('hidden');
             saveOrder(isUpdate); 
         });
@@ -323,11 +343,11 @@
                         if (isUpdate === false) { 
                             // إذا كان حفظًا جديدًا: إعادة تعيين لجلب ID جديد وتحديث قائمة العملاء
                             resetForm(); 
-                            fetchClientNames(); 
+                            fetchClientNames(true); // تحديث إجباري لقائمة العملاء بعد إضافة عميل جديد
                         } else {
-                            // تعديل ناجح: نبقى في وضع التعديل ولكن نعرض رسالة تأكيد
+                            // تعديل ناجح: نبقى في وضع التعديل
                             formTitle.textContent = `تعديل بيانات الطلب الحالي (تم الحفظ)`;
-                            fetchClientNames(); // تحديث القائمة في حال تم تغيير اسم العميل
+                            fetchClientNames(true); // تحديث القائمة في حال تم تغيير اسم العميل
                         }
                     } else {
                         throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
@@ -347,11 +367,13 @@
             
             orderIdInput.value = order['رقم الطلب'] || '';
 
+            // يجب إعادة تهيئة Select2 بالقيمة لضمان ظهور الاسم بشكل صحيح
             clientNameSelect.val(order['اسم العميل']).trigger('change.select2');
             
             document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
-            document.getElementById('deductionDate').value = formatDate(order['تاريخ قطع الرصيد']) || '';
-            document.getElementById('deliveryDate').value = formatDate(order['التاريخ المتوقع للتسليم']) || '';
+            // التواريخ تأتي كـ 'YYYY-MM-DD' من السكربت، مما يسهل ملء حقول input[type="date"]
+            document.getElementById('deductionDate').value = order['تاريخ قطع الرصيد'] || '';
+            document.getElementById('deliveryDate').value = order['التاريخ المتوقع للتسليم'] || '';
             document.getElementById('notes').value = order['ملاحظات'] || '';
 
             orderDetailsContainer.innerHTML = '';
@@ -375,7 +397,7 @@
             formTitle.textContent = 'إدخال طلب جديد';
             formFeedback.textContent = '';
             
-            clientNameSelect.val(null).trigger('change.select2'); // مسح اختيار العميل
+            clientNameSelect.val(null).trigger('change.select2'); 
             
             orderDetailsContainer.innerHTML = '';
             addOrderDetailField(); 
@@ -387,17 +409,6 @@
             
             if (fetchNewID) {
                 fetchNewOrderId(); // جلب رقم طلب جديد
-            }
-        }
-
-        function formatDate(dateValue) {
-            if (!dateValue) return '';
-            try {
-                const date = new Date(dateValue);
-                if (isNaN(date)) return '';
-                return date.toISOString().split('T')[0]; 
-            } catch (e) {
-                return '';
             }
         }
         
