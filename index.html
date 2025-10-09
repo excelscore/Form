@@ -84,8 +84,8 @@
     </div>
 
     <script>
-        // 🚨🚨 يجب تحديث هذا الرابط بالرابط النهائي الذي حصلت عليه من خطوة النشر "Anyone"
-        const WEB_APP_URL = 'ضع_رابط_التطبيق_الجديد_هنا';
+        // 🚨🚨 رابط النشر الذي أرسلته سابقًا (يرجى التأكد من أنه لا يزال صحيحاً)
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxrzrEyf0AAT7U9A1KDQ1Do49UTiukZBdtwJun_TUZtJNBvYWvNfJZSNNKXqwMDF1M/exec';
         
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
@@ -163,7 +163,19 @@
             const url = `${WEB_APP_URL}?action=findOrderById&${queryParam}`;
 
             fetch(url)
-                .then(res => res.json())
+                .then(res => {
+                    // 🚨🚨 معالجة الخطأ الذي يظهر لك (Unexpected token '<')
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            if (text.startsWith('<!DOCTYPE')) {
+                                // هذا هو الخطأ الذي يحدث عندما يتم إرسال HTML بدلاً من JSON
+                                throw new Error("Connection Error: The server sent an HTML page instead of JSON. Please ensure your deployment is published as 'Web App' with access 'Anyone'.");
+                            }
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        });
+                    }
+                    return res.json();
+                })
                 .then(result => {
                     showLoader(false);
                     if (result.status === 'success') {
@@ -179,7 +191,11 @@
                 })
                 .catch(error => {
                     showLoader(false);
-                    searchFeedback.textContent = `حدث خطأ أثناء البحث: ${error.message}`;
+                    // عرض رسالة الخطأ للمستخدم
+                    const displayError = error.message.includes("Connection Error") ? 
+                                         "فشل الاتصال: يُرجى التأكد من أن رابط النشر صحيح ويعمل كـ API." : 
+                                         `حدث خطأ أثناء البحث: ${error.message}`;
+                    searchFeedback.textContent = displayError;
                     searchFeedback.className = 'text-red-600 font-bold mt-2';
                 });
         }
@@ -306,7 +322,7 @@
         // --------------------- تهيئة النموذج ---------------------
 
         function populateFormForUpdate(order) {
-            // 🚨🚨 نستخدم الأسماء المباشرة للبيانات المرسلة من Apps Script 
+            // نستخدم الأسماء المباشرة للبيانات المرسلة من Apps Script 
             const orderID = order.orderId || ''; 
             formTitle.textContent = `تعديل بيانات الطلب رقم ${orderID}`;
             
@@ -315,7 +331,7 @@
             
             document.getElementById('phoneNumber').value = order.phone || '';
             
-            // 🚨 تحويل التواريخ: من dd/MM/yyyy إلى yyyy-MM-dd لملء حقل التاريخ
+            // تحويل التواريخ: من dd/MM/yyyy إلى yyyy-MM-dd لملء حقل التاريخ
             const deductionDateValue = order.deductionDate || '';
             document.getElementById('deductionDate').value = formatDateForInput(deductionDateValue);
             
