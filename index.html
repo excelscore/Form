@@ -84,8 +84,8 @@
     </div>
 
     <script>
-        // 🚨🚨 تأكد من أن هذا هو رابط تطبيق الويب الأخير الذي قمت بنشره!
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-sNNjlyiNfDYAQwRuR-f-moGT2GAyO-kDl-gC09YIjvO4vc1DXXLNLmG3tzeWx_Dg/exec';
+        // 🚨🚨 تم تحديث رابط تطبيق الويب هنا
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxrzrEyf0AAT7U9A1KDQ1Do49UTiukZBdtwJun_TUZtJNBvYWvNfJZSNNKXqwMDF1M/exec';
         
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
@@ -115,7 +115,6 @@
                 .then(result => {
                     if (result.status === 'success' && result.orderId) {
                         newOrderIdCache = result.orderId;
-                        // نملأ الخانة التلقائية فقط إذا كان النموذج في وضع الإدخال الجديد
                         if (submitButton.classList.contains('hidden')) {
                              // لا نغير شيئاً في وضع التعديل
                         } else {
@@ -164,9 +163,8 @@
                     } else {
                         searchFeedback.textContent = `لم يتم العثور على الطلب رقم ${orderId}.`;
                         searchFeedback.className = 'text-red-600 font-bold mt-2';
-                        // في حالة عدم العثور، نعود لوضع الإدخال الجديد ونحدث الـ ID التلقائي
                         resetForm(true); 
-                        searchIdInput.value = orderId; // نبقي الرقم الذي بحثنا عنه في خانة البحث
+                        searchIdInput.value = orderId; 
                     }
                 })
                 .catch(error => {
@@ -233,7 +231,6 @@
         
         orderForm.addEventListener('submit', e => {
             e.preventDefault();
-            // نحدد ما إذا كان الوضع تعديلاً بناءً على ظهور زر التعديل
             const isUpdate = !updateButton.classList.contains('hidden');
             saveOrder(isUpdate); 
         });
@@ -279,10 +276,8 @@
                         formFeedback.textContent = result.message;
                         formFeedback.className = 'text-green-600 font-bold mt-4';
                         
-                        // العودة لوضع الإدخال الجديد
                         resetForm(true); 
                         
-                        // مسح حقل البحث
                         searchIdInput.value = '';
                         searchFeedback.textContent = '';
 
@@ -303,7 +298,6 @@
             const orderID = order['رقم الطلب (ID):'] || '';
             formTitle.textContent = `تعديل بيانات الطلب رقم ${orderID}`;
             
-            // ملء الحقول
             orderIdInput.value = orderID;
             clientNameInput.value = order['اسم العميل'] || '';
             
@@ -323,7 +317,6 @@
             }
             adjustAddMoreButton();
             
-            // إظهار أزرار التعديل والإلغاء وإخفاء الحفظ
             submitButton.classList.add('hidden');
             updateButton.classList.remove('hidden');
             cancelButton.classList.remove('hidden');
@@ -342,12 +335,10 @@
             addOrderDetailField(); 
             adjustAddMoreButton();
             
-            // إظهار زر الحفظ وإخفاء التعديل والإلغاء
             submitButton.classList.remove('hidden');
             updateButton.classList.add('hidden');
             cancelButton.classList.add('hidden');
             
-            // نستخدم الرقم الجديد المخزن في الكاش ونطلب تحديثه
             if (fetchNewID) {
                 orderIdInput.value = newOrderIdCache || '...';
                 fetchNewOrderId(); 
