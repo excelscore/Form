@@ -114,7 +114,7 @@
                 // يجب أن تكون الأجزاء هي [اليوم, الشهر, السنة]
                 return `${parts[2]}-${parts[1]}-${parts[0]}`; 
             }
-            return dateString; // إذا كان التنسيق خاطئًا، أعد القيمة كما هي
+            return dateString;
         }
 
         // --------------------- جلب رقم الطلب التلقائي ---------------------
@@ -267,6 +267,7 @@
                 clientName: clientName, 
                 phone: phoneNumber,
                 orderDetails: orderDetails,
+                // نرسل التاريخ بصيغة yyyy-MM-dd التي يأخذها حقل الإدخال
                 deductionDate: document.getElementById('deductionDate').value,
                 deliveryDate: document.getElementById('deliveryDate').value,
                 notes: document.getElementById('notes').value
@@ -305,25 +306,27 @@
         // --------------------- تهيئة النموذج ---------------------
 
         function populateFormForUpdate(order) {
-            const orderID = order['رقم الطلب (ID):'] || '';
+            // 🚨🚨 نستخدم الأسماء المباشرة للبيانات المرسلة من Apps Script 
+            const orderID = order.orderId || ''; 
             formTitle.textContent = `تعديل بيانات الطلب رقم ${orderID}`;
             
             orderIdInput.value = orderID;
-            clientNameInput.value = order['اسم العميل'] || '';
+            clientNameInput.value = order.clientName || '';
             
-            document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
+            document.getElementById('phoneNumber').value = order.phone || '';
             
-            // 🚨🚨 ملء حقول التاريخ باستخدام دالة التحويل الجديدة 
-            const deductionDateValue = order['تاريخ قطع الرصيد'] || '';
+            // 🚨 تحويل التواريخ: من dd/MM/yyyy إلى yyyy-MM-dd لملء حقل التاريخ
+            const deductionDateValue = order.deductionDate || '';
             document.getElementById('deductionDate').value = formatDateForInput(deductionDateValue);
             
-            const deliveryDateValue = order['التاريخ المتوقع للتسليم'] || '';
+            const deliveryDateValue = order.deliveryDate || '';
             document.getElementById('deliveryDate').value = formatDateForInput(deliveryDateValue);
             
-            document.getElementById('notes').value = order['ملاحظات'] || '';
+            document.getElementById('notes').value = order.notes || '';
 
+            // تفاصيل الأوردر
             orderDetailsContainer.innerHTML = '';
-            const allDetailsString = order['تفاصيل الأوردر'] || ''; 
+            const allDetailsString = order.orderDetails || ''; 
             const detailsArray = allDetailsString.split(' || ').filter(d => d.trim() !== '');
             
             if (detailsArray.length > 0) {
