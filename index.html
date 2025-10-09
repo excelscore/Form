@@ -84,8 +84,8 @@
     </div>
 
     <script>
-        // 🚨🚨 يجب تغيير هذا الرابط بالرابط الجديد الذي تحصل عليه من خطوة النشر النهائية
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxrzrEyf0AAT7U9A1KDQ1Do49UTiukZBdtwJun_TUZtJNBvYWvNfJZSNNKXqwMDF1M/exec';
+        // 🚨🚨 يجب تحديث هذا الرابط بالرابط النهائي الذي حصلت عليه من خطوة النشر "Anyone"
+        const WEB_APP_URL = 'ضع_رابط_التطبيق_الجديد_هنا';
         
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
@@ -115,9 +115,7 @@
                 .then(result => {
                     if (result.status === 'success' && result.orderId) {
                         newOrderIdCache = result.orderId;
-                        if (submitButton.classList.contains('hidden')) {
-                             // لا نغير شيئاً في وضع التعديل
-                        } else {
+                        if (!submitButton.classList.contains('hidden')) {
                             orderIdInput.value = result.orderId;
                         }
                         orderIdInput.placeholder = '';
@@ -302,6 +300,7 @@
             clientNameInput.value = order['اسم العميل'] || '';
             
             document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
+            // ملء حقول التاريخ باستخدام التنسيق YYYY-MM-DD الذي جلبه السكربت
             document.getElementById('deductionDate').value = order['تاريخ قطع الرصيد'] || '';
             document.getElementById('deliveryDate').value = order['التاريخ المتوقع للتسليم'] || '';
             document.getElementById('notes').value = order['ملاحظات'] || '';
