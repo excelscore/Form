@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة الطلبات</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -22,11 +20,7 @@
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .input-group { display: flex; align-items: flex-start; gap: 8px; }
-        /* تصحيح تنسيق Select2 ليدعم RTL */
-        .select2-container--default .select2-selection--single { height: 48px !important; padding: 8px 12px; border-radius: 0.375rem; border-color: #d1d5db; text-align: right; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { left: 1px !important; right: auto; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 28px; padding-right: 0; padding-left: 10px; text-align: right; }
-        .select2-dropdown { text-align: right; }
+        .form-section { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -34,17 +28,23 @@
     <div id="main-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
         <h1 class="text-3xl md:text-4xl font-bold text-blue-800 text-center mb-8">نظام إدخال وتعديل الطلبات 📝</h1>
 
+        <div class="form-section bg-yellow-50 shadow-md">
+            <h2 class="text-xl font-bold text-yellow-700 mb-4">البحث عن طلب لتعديله</h2>
+            <div class="flex space-x-2 rtl:space-x-reverse">
+                <input type="text" id="searchIdInput" placeholder="أدخل رقم الطلب هنا" class="flex-grow p-3 border border-gray-300 rounded-md text-left" dir="ltr">
+                <button type="button" onclick="handleSearch()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition duration-300">بحث 🔎</button>
+            </div>
+            <p id="search-feedback" class="text-center mt-2 font-bold"></p>
+        </div>
+
         <div id="order-form-view" class="bg-white p-6 rounded-lg shadow-md">
             <h2 id="form-title" class="text-2xl font-bold text-green-600 mb-6">إدخال طلب جديد</h2>
             
             <form id="order-form" class="space-y-4">
                 
                 <div id="orderIdDisplay" class="mb-4">
-                    <label for="orderIdSelect" class="text-sm font-semibold text-gray-700">* رقم الطلب (ID):</label>
-                    <select id="orderIdSelect" class="w-full p-3 border border-gray-300 rounded-md" required>
-                        <option value="NEW_ORDER">طلب جديد (رقم: <span id="newOrderIdDisplay">...</span>)</option>
-                        </select>
-                    <input type="hidden" id="orderId" value="">
+                    <label for="orderId" class="text-sm font-semibold text-gray-700">رقم الطلب (ID):</label>
+                    <input type="text" id="orderId" class="w-full p-3 border border-gray-300 bg-gray-50 rounded-md mt-1" readonly placeholder="جاري الجلب...">
                 </div>
                 
                 <input type="text" id="clientName" placeholder="* اسم العميل" class="w-full p-3 border border-gray-300 rounded-md" required>
@@ -74,6 +74,7 @@
                 <div class="text-center pt-6 space-x-4">
                     <button type="submit" id="submit-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">حفظ طلب جديد ✅</button>
                     <button type="button" onclick="saveOrder(true)" id="update-button" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 hidden">تعديل البيانات 🔄</button>
+                    <button type="button" onclick="resetForm(true)" id="cancel-update-button" class="bg-gray-400 hover:bg-gray-500 text-black font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 ml-4 hidden">إلغاء ❌</button>
                 </div>
             </form>
             <p id="form-feedback" class="text-center mt-4 font-bold"></p>
@@ -83,102 +84,70 @@
     </div>
 
     <script>
-        // 🚨🚨 الرابط الجديد الذي أرسلته
+        // 🚨🚨 تأكد من أن هذا هو رابط تطبيق الويب الأخير الذي قمت بنشره!
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-sNNjlyiNfDYAQwRuR-f-moGT2GAyO-kDl-gC09YIjvO4vc1DXXLNLmG3tzeWx_Dg/exec';
         
         const loader = document.getElementById('loader');
         const formFeedback = document.getElementById('form-feedback');
+        const searchFeedback = document.getElementById('search-feedback');
         const orderForm = document.getElementById('order-form');
         const orderDetailsContainer = document.getElementById('orderDetailsContainer');
         const submitButton = document.getElementById('submit-button');
         const updateButton = document.getElementById('update-button');
+        const cancelButton = document.getElementById('cancel-update-button');
         const formTitle = document.getElementById('form-title');
         
-        const orderIdSelect = $('#orderIdSelect'); 
-        const orderIdInputHidden = document.getElementById('orderId'); 
+        const orderIdInput = document.getElementById('orderId'); 
+        const searchIdInput = document.getElementById('searchIdInput');
         const clientNameInput = document.getElementById('clientName');
 
-        let currentNewOrderId = null; // لتخزين رقم الطلب الجديد قبل الحفظ
-        let isUpdateMode = false;
+        let newOrderIdCache = null; 
 
         function showLoader(show) { loader.classList.toggle('hidden', !show); }
-
-        // --------------------- تهيئة القائمة المنسدلة لرقم الطلب ---------------------
-
-        function initializeOrderIdSelect() {
-            orderIdSelect.select2({
-                placeholder: "اختيار رقم طلب للتعديل أو طلب جديد",
-                dir: "rtl"
-            }).on('select2:select', function (e) {
-                const selectedId = e.params.data.id;
-                if (selectedId === 'NEW_ORDER') {
-                    resetForm(false);
-                } else {
-                    searchOrderById(selectedId);
-                }
-            });
-        }
+        
+        // --------------------- جلب رقم الطلب التلقائي ---------------------
 
         function fetchNewOrderId() {
-            document.getElementById('newOrderIdDisplay').textContent = '...';
+            orderIdInput.placeholder = 'جاري الجلب...';
             const url = `${WEB_APP_URL}?action=getNewOrderId`;
             fetch(url)
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success' && result.orderId) {
-                        currentNewOrderId = result.orderId;
-                        document.getElementById('newOrderIdDisplay').textContent = result.orderId;
-                        // نضع الرقم الجديد في الحقل المخفي عندما يكون الوضع طلب جديد
-                        if (orderIdSelect.val() === 'NEW_ORDER') {
-                             orderIdInputHidden.value = result.orderId;
+                        newOrderIdCache = result.orderId;
+                        // نملأ الخانة التلقائية فقط إذا كان النموذج في وضع الإدخال الجديد
+                        if (submitButton.classList.contains('hidden')) {
+                             // لا نغير شيئاً في وضع التعديل
+                        } else {
+                            orderIdInput.value = result.orderId;
                         }
+                        orderIdInput.placeholder = '';
                     } else {
                         throw new Error(result.message || 'فشل جلب الرقم التسلسلي');
                     }
                 })
                 .catch(error => {
                     console.error("Failed to fetch new order ID:", error);
-                    document.getElementById('newOrderIdDisplay').textContent = 'ERROR';
+                    orderIdInput.value = 'ERROR';
+                    orderIdInput.placeholder = 'فشل جلب الرقم التسلسلي';
                 });
         }
+        
+        // --------------------- البحث عن الطلب ---------------------
 
-        function fetchAllOrderIds(callback) {
-            const url = `${WEB_APP_URL}?action=getAllOrderIds`;
-            fetch(url)
-                .then(res => res.json())
-                .then(result => {
-                    if (result.status === 'success' && result.ids) {
-                        populateOrderIdSelect(result.ids);
-                        if (callback) callback();
-                    }
-                })
-                .catch(error => {
-                    console.error("Failed to fetch order IDs:", error);
-                });
-        }
-
-        function populateOrderIdSelect(ids) {
-            const currentVal = orderIdSelect.val(); 
-            const newOrderOption = `<option value="NEW_ORDER">طلب جديد (رقم: ${currentNewOrderId || '...'}</option>`;
-            
-            orderIdSelect.empty().append(newOrderOption);
-            ids.forEach(id => {
-                orderIdSelect.append(new Option(id, id));
-            });
-            
-            // محاولة إعادة اختيار القيمة السابقة
-            if (currentVal && (currentVal === 'NEW_ORDER' || ids.includes(currentVal))) {
-                 orderIdSelect.val(currentVal).trigger('change.select2'); 
-            } else {
-                 // إجباره على اختيار "طلب جديد" عند التعبئة الأولية
-                 orderIdSelect.val('NEW_ORDER').trigger('change.select2'); 
+        function handleSearch() {
+            const orderId = searchIdInput.value.trim();
+            if (!orderId || isNaN(orderId)) {
+                searchFeedback.textContent = 'الرجاء إدخال رقم طلب صحيح (أرقام فقط).';
+                searchFeedback.className = 'text-red-600 font-bold mt-2';
+                return;
             }
+            searchOrderById(orderId);
         }
-
-        // --------------------- وظيفة البحث ---------------------
 
         function searchOrderById(orderId) {
-            formFeedback.textContent = `جاري البحث عن الطلب رقم ${orderId}...`;
+            searchFeedback.textContent = `جاري البحث عن الطلب رقم ${orderId}...`;
+            searchFeedback.className = 'text-blue-600 font-bold mt-2';
             showLoader(true);
 
             const queryParam = `orderId=${encodeURIComponent(orderId)}`;
@@ -189,25 +158,67 @@
                 .then(result => {
                     showLoader(false);
                     if (result.status === 'success') {
-                        formFeedback.textContent = `تم العثور على الطلب رقم ${orderId}. قم بالتعديل ثم اضغط "تعديل البيانات".`;
-                        formFeedback.className = 'text-blue-600 font-bold mt-4';
+                        searchFeedback.textContent = `تم العثور على الطلب رقم ${orderId}. يمكنك الآن التعديل.`;
+                        searchFeedback.className = 'text-green-600 font-bold mt-2';
                         populateFormForUpdate(result.order);
                     } else {
-                        formFeedback.textContent = `لم يتم العثور على الطلب رقم ${orderId}.`;
-                        formFeedback.className = 'text-red-600 font-bold mt-4';
-                        // في حالة فشل البحث (لا ينبغي أن يحدث إذا كان ID موجودًا في القائمة)
+                        searchFeedback.textContent = `لم يتم العثور على الطلب رقم ${orderId}.`;
+                        searchFeedback.className = 'text-red-600 font-bold mt-2';
+                        // في حالة عدم العثور، نعود لوضع الإدخال الجديد ونحدث الـ ID التلقائي
                         resetForm(true); 
+                        searchIdInput.value = orderId; // نبقي الرقم الذي بحثنا عنه في خانة البحث
                     }
                 })
                 .catch(error => {
                     showLoader(false);
-                    formFeedback.textContent = `حدث خطأ أثناء البحث: ${error.message}`;
-                    formFeedback.className = 'text-red-600 font-bold mt-4';
+                    searchFeedback.textContent = `حدث خطأ أثناء البحث: ${error.message}`;
+                    searchFeedback.className = 'text-red-600 font-bold mt-2';
                 });
         }
         
-        // --------------------- وظيفة الحفظ والتعديل ---------------------
+        // --------------------- وظائف مساعدة لحقول تفاصيل الطلب ---------------------
 
+        function addOrderDetailField(detail = '') {
+            const container = orderDetailsContainer;
+            const newFieldDiv = document.createElement('div');
+            newFieldDiv.className = 'input-group';
+            
+            const existingAddButton = container.querySelector('.input-group button.bg-blue-500');
+            if (existingAddButton) {
+                existingAddButton.remove();
+            }
+
+            let fieldHtml = `
+                <input type="text" name="orderDetail" placeholder="تفاصيل الأوردر" class="flex-grow p-3 border border-gray-300 rounded-md" value="${detail}" required>
+                <button type="button" onclick="this.parentNode.remove(); adjustAddMoreButton()" class="bg-red-500 hover:bg-red-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap">حذف</button>
+            `;
+            
+            newFieldDiv.innerHTML = fieldHtml;
+            container.appendChild(newFieldDiv);
+            adjustAddMoreButton();
+        }
+        
+        function adjustAddMoreButton() {
+            const container = orderDetailsContainer;
+            const fields = container.querySelectorAll('.input-group');
+
+            if (fields.length > 0) {
+                 const lastField = fields[fields.length - 1];
+                 
+                 if (!lastField.querySelector('button.bg-blue-500')) {
+                    const addButton = document.createElement('button');
+                    addButton.type = 'button';
+                    addButton.textContent = 'إضافة المزيد';
+                    addButton.className = 'bg-blue-500 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-md shadow-sm whitespace-nowrap';
+                    addButton.onclick = () => addOrderDetailField();
+                    
+                    lastField.appendChild(addButton);
+                 }
+            } else {
+                 addOrderDetailField('');
+            }
+        }
+        
         function collectOrderDetails() {
             const details = [];
             document.querySelectorAll('input[name="orderDetail"]').forEach(input => {
@@ -217,28 +228,30 @@
             });
             return details.join(' || '); 
         }
+
+        // --------------------- الحفظ والتعديل ---------------------
         
         orderForm.addEventListener('submit', e => {
             e.preventDefault();
-            // الوضع يعتمد على القيمة المختارة في القائمة المنسدلة
-            const isUpdate = (orderIdSelect.val() !== 'NEW_ORDER');
+            // نحدد ما إذا كان الوضع تعديلاً بناءً على ظهور زر التعديل
+            const isUpdate = !updateButton.classList.contains('hidden');
             saveOrder(isUpdate); 
         });
 
         function saveOrder(isUpdate = false) {
             const clientName = clientNameInput.value;
             const phoneNumber = document.getElementById('phoneNumber').value;
+            
             if (!clientName || !phoneNumber) { 
                 alert('الرجاء إدخال اسم العميل ورقم الهاتف.'); 
                 return; 
             }
-
+            
             formFeedback.textContent = '';
             showLoader(true);
 
             const orderDetails = collectOrderDetails();
-            // قيمة orderIdInputHidden تمثل الرقم الفعلي للطلب الحالي (سواء كان جديد أو قديم)
-            const orderId = orderIdInputHidden.value; 
+            const orderId = orderIdInput.value; 
 
             const params = {
                 action: 'saveOrder',
@@ -266,19 +279,13 @@
                         formFeedback.textContent = result.message;
                         formFeedback.className = 'text-green-600 font-bold mt-4';
                         
-                        // بعد الحفظ أو التعديل، يجب تحديث قائمة أرقام الطلبات
-                        fetchAllOrderIds(() => {
-                            // إذا كانت عملية حفظ جديدة، ننتقل لوضع الطلب الجديد التالي
-                            if (isUpdate === false) { 
-                                resetForm(true); 
-                                // نختار الرقم الجديد الذي تم حفظه مؤخراً
-                                orderIdSelect.val(orderId).trigger('change.select2');
-                            } else {
-                                // إذا كانت عملية تعديل، نظل على نفس الطلب المُعدَّل
-                                formTitle.textContent = `تعديل بيانات الطلب رقم ${orderId}`;
-                            }
-                        });
+                        // العودة لوضع الإدخال الجديد
+                        resetForm(true); 
                         
+                        // مسح حقل البحث
+                        searchIdInput.value = '';
+                        searchFeedback.textContent = '';
+
                     } else {
                         throw new Error(result.message || 'حدث خطأ غير معروف من الخادم.');
                     }
@@ -290,16 +297,15 @@
                 });
         }
         
-        // --------------------- وظائف تهيئة النموذج ---------------------
+        // --------------------- تهيئة النموذج ---------------------
 
         function populateFormForUpdate(order) {
             const orderID = order['رقم الطلب (ID):'] || '';
             formTitle.textContent = `تعديل بيانات الطلب رقم ${orderID}`;
             
-            orderIdInputHidden.value = orderID; // نضع الرقم في الحقل المخفي
-            isUpdateMode = true;
-
-            clientNameInput.value = order['اسم العميل'] || ''; // حقل نصي عادي
+            // ملء الحقول
+            orderIdInput.value = orderID;
+            clientNameInput.value = order['اسم العميل'] || '';
             
             document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
             document.getElementById('deductionDate').value = order['تاريخ قطع الرصيد'] || '';
@@ -317,42 +323,42 @@
             }
             adjustAddMoreButton();
             
+            // إظهار أزرار التعديل والإلغاء وإخفاء الحفظ
             submitButton.classList.add('hidden');
             updateButton.classList.remove('hidden');
+            cancelButton.classList.remove('hidden');
+            
+            formFeedback.textContent = 'الوضع: تعديل الطلب الحالي.';
+            formFeedback.className = 'text-orange-600 font-bold mt-4';
         }
 
-        function resetForm(refetchIds = true) {
+        function resetForm(fetchNewID = true) {
             orderForm.reset();
             formTitle.textContent = 'إدخال طلب جديد';
-            formFeedback.textContent = '';
-            isUpdateMode = false;
-            
-            // نضع الرقم الجديد في الحقل المخفي 
-            orderIdInputHidden.value = currentNewOrderId;
+            formFeedback.textContent = 'الوضع: إدخال طلب جديد';
+            formFeedback.className = 'text-green-600 font-bold mt-4';
             
             orderDetailsContainer.innerHTML = '';
             addOrderDetailField(); 
             adjustAddMoreButton();
             
+            // إظهار زر الحفظ وإخفاء التعديل والإلغاء
             submitButton.classList.remove('hidden');
             updateButton.classList.add('hidden');
+            cancelButton.classList.add('hidden');
             
-            // نختار خيار "طلب جديد" في القائمة المنسدلة
-            orderIdSelect.val('NEW_ORDER').trigger('change.select2');
-
-            if (refetchIds) {
-                fetchNewOrderId(); // جلب الرقم الجديد التالي
+            // نستخدم الرقم الجديد المخزن في الكاش ونطلب تحديثه
+            if (fetchNewID) {
+                orderIdInput.value = newOrderIdCache || '...';
+                fetchNewOrderId(); 
             }
         }
         
         // 🚨 تهيئة عند تحميل الصفحة
         $(document).ready(function() {
-            // نبدأ بجلب الرقم الجديد أولاً، ثم نملأ قائمة الأرقام
             fetchNewOrderId(); 
-            fetchAllOrderIds(); 
-            initializeOrderIdSelect();
             addOrderDetailField();
-            resetForm(false); // إعداد النموذج على وضع "طلب جديد"
+            resetForm(false); 
         });
     </script>
 </body>
