@@ -105,6 +105,18 @@
 
         function showLoader(show) { loader.classList.toggle('hidden', !show); }
         
+        // --------------------- دالة تحويل التنسيق ---------------------
+        // تحول التاريخ من dd/MM/yyyy (القادم من Apps Script) إلى yyyy-MM-dd (المطلوب لحقل type="date")
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                // يجب أن تكون الأجزاء هي [اليوم, الشهر, السنة]
+                return `${parts[2]}-${parts[1]}-${parts[0]}`; 
+            }
+            return dateString; // إذا كان التنسيق خاطئًا، أعد القيمة كما هي
+        }
+
         // --------------------- جلب رقم الطلب التلقائي ---------------------
 
         function fetchNewOrderId() {
@@ -300,9 +312,14 @@
             clientNameInput.value = order['اسم العميل'] || '';
             
             document.getElementById('phoneNumber').value = order['رقم الهاتف'] || '';
-            // ملء حقول التاريخ باستخدام التنسيق YYYY-MM-DD الذي جلبه السكربت
-            document.getElementById('deductionDate').value = order['تاريخ قطع الرصيد'] || '';
-            document.getElementById('deliveryDate').value = order['التاريخ المتوقع للتسليم'] || '';
+            
+            // 🚨🚨 ملء حقول التاريخ باستخدام دالة التحويل الجديدة 
+            const deductionDateValue = order['تاريخ قطع الرصيد'] || '';
+            document.getElementById('deductionDate').value = formatDateForInput(deductionDateValue);
+            
+            const deliveryDateValue = order['التاريخ المتوقع للتسليم'] || '';
+            document.getElementById('deliveryDate').value = formatDateForInput(deliveryDateValue);
+            
             document.getElementById('notes').value = order['ملاحظات'] || '';
 
             orderDetailsContainer.innerHTML = '';
